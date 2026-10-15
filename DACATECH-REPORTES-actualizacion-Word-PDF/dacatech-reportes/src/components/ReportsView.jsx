@@ -77,7 +77,20 @@ async function exportReport(report, format) {
       popup.document.open();
       popup.document.write(html);
       popup.document.close();
-      setTimeout(() => popup.print(), 700);
+      const images = Array.from(popup.document.images);
+      await Promise.race([
+        Promise.all(images.map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+          });
+        })),
+        new Promise((resolve) => setTimeout(resolve, 8000)),
+      ]);
+      popup.focus();
+      popup.print();
+
     }
   } catch (error) {
     if (popup) popup.close();
