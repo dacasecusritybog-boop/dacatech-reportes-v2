@@ -1,0 +1,11 @@
+ACTUALIZACION DACATECH REPORTES
+
+Cambios de esta versión:
+- En el detalle de reportes con estado "Cerrado" aparecen botones para descargar el informe en Word (.doc compatible con Microsoft Word) y generar PDF mediante la ventana de impresión del navegador.
+- El informe reúne número, título, empresa, tipo de servicio, ubicación, prioridad, estado, fecha de creación, descripción, solución, historial de seguimiento y fotografías/evidencias cuando el navegador puede acceder a ellas.
+- Se conservan los archivos existentes del proyecto y la estructura de Supabase.
+
+Importante:
+- Este ZIP contiene el código fuente. No se ha publicado automáticamente en Netlify.
+- Las notificaciones push ya tienen código base en esta versión, pero requieren configurar VAPID, la Edge Function "notify", secretos y el SQL de conexión en el proyecto Supabase. En iPhone, el usuario debe añadir la PWA a la pantalla de inicio y aceptar las notificaciones.
+- No subas claves privadas al repositorio.

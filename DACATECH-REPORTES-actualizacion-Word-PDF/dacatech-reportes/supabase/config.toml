@@ -1,0 +1,4 @@
+# Solo se usa si despliegas con la CLI de Supabase (supabase functions deploy notify).
+# La función se protege con el encabezado x-webhook-secret, por eso no exige JWT.
+[functions.notify]
+verify_jwt = false
