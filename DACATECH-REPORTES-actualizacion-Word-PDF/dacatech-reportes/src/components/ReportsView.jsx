@@ -203,14 +203,26 @@ export default function ReportsView({ profile, reports, staff, active, setActive
             <div><div className="eyebrow">REPORTE #{current.ticket_number}</div><h2 id="det-title">{current.title}</h2><p className="muted">Creado {fmtDate(current.created_at)}</p></div>
             <button type="button" className="icon-btn" onClick={() => setActive(null)} aria-label="Cerrar detalle"><X aria-hidden="true" /></button>
           </div>
-          {current.status === 'Cerrado' && (
-            <div className="export-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '18px' }}>
-              <button type="button" className="primary-btn" onClick={() => exportReport(current, 'word')}><FileText size={17} aria-hidden="true" /> Descargar Word</button>
-              <button type="button" className="secondary-btn" onClick={() => exportReport(current, 'pdf')}><FileDown size={17} aria-hidden="true" /> Descargar PDF</button>
-            </div>
-          )}
+           <div className="export-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '18px' }}>
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={() => exportReport(current, 'word')}
+            >
+              <FileText size={17} aria-hidden="true" /> Descargar Word
+            </button>
+
+            <button
+              type="button"
+              className="secondary-btn"
+              onClick={() => exportReport(current, 'pdf')}
+            >
+              <FileDown size={17} aria-hidden="true" /> Descargar PDF
+            </button>
+          </div>
+
           <div className="detail-grid">
-            <div><span className="detail-label">Tipo de servicio</span><b>{current.category}</b></div>
+            <div><sepan className="detail-label">Tipo de servicio</span><b>{current.category}</b></div>
             <div><span className="detail-label">Ubicación</span><b>{current.location || 'No especificada'}</b></div>
             <div><span className="detail-label">Prioridad</span><b>{current.priority}</b></div>
             <div><span className="detail-label">Estado actual</span><b>{current.status}</b></div>
