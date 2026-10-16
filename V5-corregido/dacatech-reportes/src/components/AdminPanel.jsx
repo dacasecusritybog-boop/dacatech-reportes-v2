@@ -9,7 +9,7 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
   const [active, setActive] = useState(u.profile_exists ? Boolean(u.is_active) : true);
   const [fullName, setFullName] = useState(u.full_name || '');
   const [busy, setBusy] = useState(false);
-  const pending = !u.profile_exists || !u.is_active || !u.company_id;
+  const pending = !u.profile_exists || !u.company_id;
   const dirty = role !== (u.role || 'customer') || String(company) !== String(u.company_id ?? '') ||
     active !== Boolean(u.is_active) || fullName !== (u.full_name || '');
 
@@ -52,9 +52,9 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
           {u.profile_exists ? <Save size={16} aria-hidden="true" /> : <UserCheck size={16} aria-hidden="true" />}
           {busy ? 'Guardando…' : u.profile_exists ? 'Guardar cambios' : 'Aprobar usuario'}
         </button>
-        {u.profile_exists && u.role === 'customer' && (
+        {u.role === 'customer' && (
           <button type="button" className="secondary-btn compact" disabled={busy}
-            onClick={() => onDeactivate(u)}>
+            onClick={() => onDeactivate({ ...u, company_id: company || u.company_id, full_name: fullName })}>
             <UserX size={16} aria-hidden="true" /> {u.is_active ? 'Dar de baja' : 'Activar cliente'}
           </button>
         )}
@@ -117,7 +117,7 @@ export default function AdminPanel({ onMessage }) {
   }
 
   async function deactivateCustomer(user) {
-    if (user.role !== 'customer' || !user.profile_exists) return;
+    if (user.role !== 'customer' || !user.company_id) { onMessage('error', 'Selecciona una empresa antes de dar de baja al cliente.'); return; }
     const nextActive = !user.is_active;
     const confirmed = window.confirm(nextActive
       ? `¿Activar a ${user.full_name || user.email}? Podrá volver a ingresar a DACATECH Reportes.`
