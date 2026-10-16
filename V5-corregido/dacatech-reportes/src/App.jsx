@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, ClipboardList, LogOut, Plus, UserCircle, Users, X } from 'lucide-react';
+import { AlertCircle, Bell, ClipboardList, LogOut, Plus, UserCircle, Users, X, CheckCheck } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { detachDevice, usePush } from './lib/push';
 import { roleLabel } from './lib/constants';
@@ -37,6 +37,8 @@ export default function App() {
   const [modalError, setModalError] = useState('');
   const [toasts, setToasts] = useState([]);
   const [bannerHidden, setBannerHidden] = useState(readFlag(BANNER_KEY));
+  const [appNotifications, setAppNotifications] = useState([]);
+  const [showAppNotifications, setShowAppNotifications] = useState(false);
 
   const lastLocalWrite = useRef(0);
   const pendingOpen = useRef(new URLSearchParams(window.location.search).get('report'));
@@ -163,6 +165,45 @@ export default function App() {
         .then(({ data }) => setStaff(data || []));
     }
   }, [session?.user?.id, profile?.id, profile?.is_active, profile?.role, loadReports]); // eslint-disable-line
+
+  // Centro de notificaciones dentro de la aplicación (solicitudes de registro para administradores).
+  const loadAppNotifications = useCallback(async () => {
+    if (!supabase || profile?.role !== 'admin') return;
+    const { data, error: notificationError } = await supabase
+      .from('in_app_notifications').select('id,type,title,body,user_id,user_email,is_read,created_at')
+      .order('created_at', { ascending: false }).limit(30);
+    if (!notificationError) setAppNotifications(data || []);
+    else console.error('No se pudieron cargar las notificaciones internas:', notificationError.message);
+  }, [profile?.role]);
+
+  useEffect(() => {
+    if (!session || profile?.role !== 'admin' || !profile?.is_active) return;
+    void loadAppNotifications();
+    const channel = supabase.channel('dt-in-app-notifications-' + session.user.id)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'in_app_notifications' }, (payload) => {
+        setAppNotifications(items => [payload.new, ...items.filter(item => item.id !== payload.new.id)].slice(0, 30));
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [session?.user?.id, profile?.role, profile?.is_active, loadAppNotifications]);
+
+  async function markNotificationRead(notification) {
+    if (!notification.is_read) {
+      const { error: updateError } = await supabase.from('in_app_notifications').update({ is_read: true }).eq('id', notification.id);
+      if (updateError) { console.error('No se pudo marcar la notificación:', updateError.message); return; }
+      setAppNotifications(items => items.map(item => item.id === notification.id ? { ...item, is_read: true } : item));
+    }
+    setShowAppNotifications(false);
+    setView('admin');
+  }
+
+  async function markAllNotificationsRead() {
+    const unread = appNotifications.filter(item => !item.is_read).map(item => item.id);
+    if (!unread.length) return;
+    const { error: updateError } = await supabase.from('in_app_notifications').update({ is_read: true }).in('id', unread);
+    if (updateError) { console.error('No se pudieron marcar las notificaciones:', updateError.message); return; }
+    setAppNotifications(items => items.map(item => ({ ...item, is_read: true })));
+  }
 
   /* ---------- tiempo real ---------- */
   const addToast = useCallback((t) => {
@@ -391,6 +432,15 @@ export default function App() {
         <header className="topbar">
           <div><div className="eyebrow">CENTRO DE SOPORTE</div><h1>{titles[view]}</h1></div>
           <div className="top-actions">
+            {profile.role === 'admin' && <div className="app-notification-wrap" style={{ position: 'relative' }}>
+              <button type="button" className="secondary-btn compact" aria-label={`Notificaciones internas: ${appNotifications.filter(n => !n.is_read).length} sin leer`} aria-expanded={showAppNotifications} onClick={() => setShowAppNotifications(open => !open)}>
+                <Bell size={18} aria-hidden="true" /> Notificaciones{appNotifications.some(n => !n.is_read) ? ` (${appNotifications.filter(n => !n.is_read).length})` : ''}
+              </button>
+              {showAppNotifications && <div className="app-notification-panel" style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 100, width: 'min(360px, 88vw)', maxHeight: '60vh', overflowY: 'auto', background: 'var(--card, #fff)', color: 'var(--text, #172033)', border: '1px solid var(--border, #dbe2ea)', borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,.16)', padding: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}><b>Centro de notificaciones</b><button type="button" className="secondary-btn compact" onClick={markAllNotificationsRead} disabled={!appNotifications.some(n => !n.is_read)}><CheckCheck size={15} /> Leídas</button></div>
+                {appNotifications.length === 0 ? <p className="muted">No hay notificaciones todavía.</p> : appNotifications.map(n => <button type="button" key={n.id} onClick={() => markNotificationRead(n)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 8px', marginTop: 4, border: 0, borderRadius: 8, background: n.is_read ? 'transparent' : 'var(--surface, #eef5ff)', color: 'inherit', cursor: 'pointer' }}><b>{n.title}</b><div style={{ fontSize: 13, marginTop: 4 }}>{n.body}</div><small style={{ opacity: .7 }}>{new Date(n.created_at).toLocaleString('es-CO')}</small></button>)}
+              </div>}
+            </div>}
             <div className="secure-tag"><span className="online-dot" aria-hidden="true" /> Conexión cifrada</div>
             <button type="button" className="primary-btn compact" onClick={() => { setShowCreate(true); setModalError(''); }}><Plus size={18} aria-hidden="true" /> Nuevo reporte</button>
           </div>
