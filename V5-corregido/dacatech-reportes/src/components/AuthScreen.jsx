@@ -8,8 +8,6 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
   const [mode, setMode] = useState(recovery ? 'reset' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -38,18 +36,6 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
         setNotice('Contraseña actualizada correctamente. Ya puedes iniciar sesión.');
         return;
       }
-      if (mode === 'signup') {
-        if (!accepted) throw new Error('Debes aceptar la política de privacidad y los términos para crear tu cuenta.');
-        const { data, error: err } = await supabase.auth.signUp({
-          email, password,
-          options: { data: { full_name: fullName, accepted_terms_at: new Date().toISOString(), terms_version: EMPRESA.versionLegal } },
-        });
-        if (err) throw err;
-        setNotice(data.session
-          ? 'Cuenta creada. Un administrador de DACATECH debe vincularte a tu empresa antes de usar el portal.'
-          : 'Cuenta creada. Revisa tu correo para confirmar el acceso; luego un administrador debe vincularte a tu empresa.');
-        return;
-      }
       const { error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err) throw err;
     } catch (err) {
@@ -57,10 +43,9 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
     } finally { setBusy(false); }
   }
 
-  const titles = { login: 'Inicia sesión', signup: 'Crea tu cuenta', forgot: 'Restablecer contraseña', reset: 'Crear nueva contraseña' };
+  const titles = { login: 'Inicia sesión', forgot: 'Restablecer contraseña', reset: 'Crear nueva contraseña' };
   const subs = {
     login: 'Ingresa para consultar y gestionar tus reportes de servicio.',
-    signup: 'Registra tu acceso; el administrador debe vincularlo a tu empresa.',
     forgot: 'Te enviaremos un enlace para crear una contraseña nueva.',
     reset: 'Escribe una contraseña nueva para tu cuenta. Debe tener al menos 8 caracteres.',
   };
@@ -90,9 +75,6 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
         {notice && <div className="success-msg" role="status">{notice}</div>}
 
         <form onSubmit={submit} className="form-stack">
-          {mode === 'signup' && (
-            <label>Nombre completo<input value={fullName} onChange={(e) => setFullName(e.target.value)} required autoComplete="name" placeholder="Tu nombre" /></label>
-          )}
           {mode !== 'reset' && (
             <label>Correo electrónico<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="nombre@empresa.com" autoComplete="email" /></label>
           )}
@@ -102,23 +84,13 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
             </label>
           )}
-          {mode === 'signup' && (
-            <label className="check-row">
-              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
-              <span>He leído y acepto la <button type="button" className="link-btn" onClick={() => onOpenLegal('privacidad')}>política de privacidad</button> y los <button type="button" className="link-btn" onClick={() => onOpenLegal('terminos')}>términos de uso</button>, y autorizo el tratamiento de mis datos personales.</span>
-            </label>
-          )}
           <button className="primary-btn" disabled={!isSupabaseConfigured || busy}>
-            {busy ? 'Un momento…' : { login: 'Iniciar sesión', signup: 'Crear cuenta', forgot: 'Enviar enlace de recuperación', reset: 'Guardar nueva contraseña' }[mode]} <ArrowRight size={18} aria-hidden="true" />
+            {busy ? 'Un momento…' : { login: 'Iniciar sesión', forgot: 'Enviar enlace de recuperación', reset: 'Guardar nueva contraseña' }[mode]} <ArrowRight size={18} aria-hidden="true" />
           </button>
         </form>
 
         {mode === 'login' && <button type="button" className="text-btn" onClick={() => go('forgot')}>¿Olvidaste tu contraseña?</button>}
-        {mode !== 'reset' && (
-          <button type="button" className="text-btn" onClick={() => go(mode === 'login' ? 'signup' : 'login')}>
-            {mode === 'login' ? '¿No tienes cuenta? Crear cuenta' : mode === 'signup' ? '¿Ya tienes cuenta? Iniciar sesión' : 'Volver a iniciar sesión'}
-          </button>
-        )}
+        {mode === 'forgot' && <button type="button" className="text-btn" onClick={() => go('login')}>Volver a iniciar sesión</button>}
         {mode === 'reset' && <button type="button" className="text-btn" onClick={() => { window.history.replaceState({}, document.title, window.location.pathname); onRecoveryDone(); }}>Volver a iniciar sesión</button>}
         <div className="auth-footer">Sistema de reportes y soporte técnico <b>DACATECH</b></div>
         <LegalLinks onOpen={onOpenLegal} className="center" />
