@@ -81,7 +81,21 @@ export default function AdminPanel({ onMessage }) {
     setLoading(false);
   }, [onMessage]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    // Supabase Auth no emite cambios de auth.users por Realtime; refrescar solicitudes automáticamente.
+    const refreshPendingUsers = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+    const intervalId = window.setInterval(refreshPendingUsers, 10000);
+    document.addEventListener('visibilitychange', refreshPendingUsers);
+    window.addEventListener('focus', refreshPendingUsers);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', refreshPendingUsers);
+      window.removeEventListener('focus', refreshPendingUsers);
+    };
+  }, [load]);
 
   async function saveUser(id, patch) {
     if (!patch.company_id) {
