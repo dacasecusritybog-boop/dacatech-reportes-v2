@@ -8,7 +8,8 @@ const htmlEscape = (value = '') => String(value).replace(/[&<>"']/g, (c) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[c]));
 
-async function reportDocumentHtml(report) {
+async function reportDocumentHtml(report, settings = {}) {
+  const cfg = { report_title: 'INFORME DE SERVICIO TÉCNICO', header_text: 'DACATECH · Reportes', footer_text: 'DACATECH REPORTES · Informe generado desde el sistema. Verifique los datos antes de entregar.', primary_color: '#0878e8', accent_color: '#111827', show_logo: true, show_report_number: true, show_priority: true, show_status: true, show_description: true, show_resolution: true, show_history: true, show_customer_photos: true, show_service_photos: true, page_size: 'A4', ...settings };
   const updates = (report.report_updates || []).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   let photos = [];
   if (report.report_photos?.length) {
@@ -35,36 +36,38 @@ async function reportDocumentHtml(report) {
     } catch { photos = []; }
   }
   const lastUpdate = updates.length ? updates[updates.length - 1] : null;
-  const photoHtml = photos.length
-    ? photos.map((p) => p.dataUrl ? `<figure><img src="${p.dataUrl}" alt="Evidencia del reporte"><figcaption>${htmlEscape(p.photo_type === 'service' ? 'Evidencia de atención' : 'Foto inicial')}${p.caption ? ` — ${htmlEscape(p.caption)}` : ''}</figcaption></figure>` : `<p>${htmlEscape(p.caption || 'Fotografía adjunta (no disponible para incrustar)')}</p>`).join('')
+  const visiblePhotos = photos.filter(p => p.photo_type === 'service' ? cfg.show_service_photos : cfg.show_customer_photos);
+  const photoHtml = visiblePhotos.length
+    ? visiblePhotos.map((p) => p.dataUrl ? `<figure><img src="${p.dataUrl}" alt="Evidencia del reporte"><figcaption>${htmlEscape(p.photo_type === 'service' ? 'Evidencia de atención' : 'Foto inicial')}${p.caption ? ` — ${htmlEscape(p.caption)}` : ''}</figcaption></figure>` : `<p>${htmlEscape(p.caption || 'Fotografía adjunta (no disponible para incrustar)')}</p>`).join('')
     : '<p>No hay fotografías disponibles.</p>';
   return `<!doctype html><html><head><meta charset="utf-8"><title>Reporte DACATECH #${htmlEscape(report.ticket_number)}</title>
-  <style>body{font-family:Arial,sans-serif;color:#182334;margin:32px;font-size:11pt}h1{color:#0878e8;font-size:22pt;margin-bottom:4px}h2{font-size:14pt;border-bottom:1px solid #ccd6e2;padding-bottom:6px;margin-top:24px}.brand{letter-spacing:3px;color:#0878e8;font-weight:bold}.muted{color:#596b80}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{padding:10px;border:1px solid #d9e2ec;border-radius:6px}.label{display:block;color:#596b80;font-size:9pt;margin-bottom:4px}.text{white-space:pre-wrap;line-height:1.5}figure{margin:14px 0;page-break-inside:avoid}img{max-width:100%;max-height:520px;object-fit:contain}figcaption{font-size:9pt;color:#596b80;margin-top:5px}.footer{margin-top:30px;border-top:1px solid #ccd6e2;padding-top:8px;font-size:9pt;color:#596b80}@media print{body{margin:18mm}}</style></head><body>
-  <div class="brand">DACATECH · INFORME DE SERVICIO TÉCNICO</div><h1>Reporte #${htmlEscape(report.ticket_number)} — ${htmlEscape(report.title)}</h1><p class="muted">Documento generado: ${htmlEscape(new Date().toLocaleString('es-CO'))}</p>
+  <style>@page{size:${cfg.page_size === 'Letter' ? 'Letter' : 'A4'};margin:18mm}body{font-family:Arial,sans-serif;color:#182334;margin:32px;font-size:11pt}h1{color:${htmlEscape(cfg.primary_color)};font-size:22pt;margin-bottom:4px}h2{font-size:14pt;border-bottom:1px solid #ccd6e2;padding-bottom:6px;margin-top:24px}.brand{letter-spacing:3px;color:${htmlEscape(cfg.primary_color)};font-weight:bold}.muted{color:#596b80}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{padding:10px;border:1px solid #d9e2ec;border-radius:6px}.label{display:block;color:#596b80;font-size:9pt;margin-bottom:4px}.text{white-space:pre-wrap;line-height:1.5}figure{margin:14px 0;page-break-inside:avoid}img{max-width:100%;max-height:520px;object-fit:contain}figcaption{font-size:9pt;color:#596b80;margin-top:5px}.footer{margin-top:30px;border-top:1px solid #ccd6e2;padding-top:8px;font-size:9pt;color:#596b80}@media print{body{margin:18mm}}</style></head><body>
+  ${cfg.show_logo && cfg.logo_url ? `<img class="logo" src="${htmlEscape(cfg.logo_url)}" alt="Logo" style="max-width:180px;max-height:80px;object-fit:contain">` : ''}<div class="brand">${htmlEscape(cfg.header_text || 'DACATECH · Reportes')}</div><h1>${htmlEscape(cfg.report_title)}${cfg.show_report_number ? ` · #${htmlEscape(report.ticket_number)}` : ''} — ${htmlEscape(report.title)}</h1><p class="muted">Documento generado: ${htmlEscape(new Date().toLocaleString('es-CO'))}</p>
   <h2>Datos del servicio</h2><div class="grid">
   <div class="field"><span class="label">Cliente / empresa</span>${htmlEscape(report.companies?.name || 'No especificado')}</div>
   <div class="field"><span class="label">Tipo de servicio</span>${htmlEscape(report.category)}</div>
   <div class="field"><span class="label">Ubicación</span>${htmlEscape(report.location || 'No especificada')}</div>
-  <div class="field"><span class="label">Prioridad</span>${htmlEscape(report.priority)}</div>
-  <div class="field"><span class="label">Estado</span>${htmlEscape(report.status)}</div>
+  ${cfg.show_priority ? `<div class="field"><span class="label">Prioridad</span>${htmlEscape(report.priority)}</div>` : ''}
+  ${cfg.show_status ? `<div class="field"><span class="label">Estado</span>${htmlEscape(report.status)}</div>` : ''}
   <div class="field"><span class="label">Fecha de creación</span>${htmlEscape(fmtDate(report.created_at))}</div>
   ${lastUpdate ? `<div class="field"><span class="label">Último seguimiento registrado</span>${htmlEscape(fmtDate(lastUpdate.created_at))}</div>` : ''}
   </div>
-  <h2>Descripción de la novedad</h2><div class="text">${htmlEscape(report.description || '')}</div>
-  <h2>Solución / trabajo realizado</h2><div class="text">${htmlEscape(report.resolution_summary || 'No se registró resumen de solución.')}</div>
-  <h2>Historial de seguimiento</h2>${updates.length ? updates.map((u) => `<p><b>${htmlEscape(u.author_name || 'Equipo DACATECH')}</b> — ${htmlEscape(fmtDate(u.created_at))}<br><span class="text">${htmlEscape(u.message || '')}</span></p>`).join('') : '<p>No hay seguimientos registrados.</p>'}
+  ${cfg.show_description ? `<h2>Descripción de la novedad</h2><div class="text">${htmlEscape(report.description || '')}</div>` : ''}
+  ${cfg.show_resolution ? `<h2>Solución / trabajo realizado</h2><div class="text">${htmlEscape(report.resolution_summary || 'No se registró resumen de solución.')}</div>` : ''}
+  ${cfg.show_history ? `<h2>Historial de seguimiento</h2>${updates.length ? updates.map((u) => `<p><b>${htmlEscape(u.author_name || 'Equipo DACATECH')}</b> — ${htmlEscape(fmtDate(u.created_at))}<br><span class="text">${htmlEscape(u.message || '')}</span></p>`).join('') : '<p>No hay seguimientos registrados.</p>'}` : ''}
   <h2>Fotografías y evidencias</h2>${photoHtml}
-  <div class="footer">DACATECH REPORTES · Informe generado desde el sistema. Verifique los datos antes de entregar.</div></body></html>`;
+  <div class="footer">${htmlEscape(cfg.footer_text)}</div></body></html>`;
 }
 
-async function exportReport(report, format) {
+async function exportReport(report, format, companyId) {
   const popup = format === 'pdf' ? window.open('', '_blank') : null;
   if (format === 'pdf' && !popup) {
     alert('El navegador bloqueó la ventana. Permite las ventanas emergentes e inténtalo de nuevo.');
     return;
   }
   try {
-    const html = await reportDocumentHtml(report);
+    const { data: settings } = await (await import('../lib/supabase')).supabase.from('company_report_settings').select('*').eq('company_id', companyId).maybeSingle();
+    const html = await reportDocumentHtml(report, settings || {});
     if (format === 'word') {
       const blob = new Blob(['\uFEFF', html], { type: 'application/msword;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -191,8 +194,8 @@ export default function ReportsView({ profile, reports, staff, active, setActive
             <button type="button" className="icon-btn" onClick={() => setActive(null)} aria-label="Cerrar detalle"><X aria-hidden="true" /></button>
           </div>
          <div className="export-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '18px' }}>
-  <button type="button" className="primary-btn" onClick={() => exportReport(current, 'word')}><FileText size={17} aria-hidden="true" /> Descargar Word</button>
-  <button type="button" className="secondary-btn" onClick={() => exportReport(current, 'pdf')}><FileDown size={17} aria-hidden="true" /> Descargar PDF</button>
+  <button type="button" className="primary-btn" onClick={() => exportReport(current, 'word', profile.company_id)}><FileText size={17} aria-hidden="true" /> Descargar Word</button>
+  <button type="button" className="secondary-btn" onClick={() => exportReport(current, 'pdf', profile.company_id)}><FileDown size={17} aria-hidden="true" /> Descargar PDF</button>
 </div>
           <div className="detail-grid">
             <div><span className="detail-label">Tipo de servicio</span><b>{current.category}</b></div>
