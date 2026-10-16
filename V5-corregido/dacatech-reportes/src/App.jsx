@@ -232,6 +232,48 @@ export default function App() {
     finally { setSaving(false); }
   }
 
+  async function deleteReport(report) {
+    if (profile?.role !== 'admin') {
+      setError('Solo un administrador puede eliminar reportes.');
+      return;
+    }
+    const ticket = report.ticket_number ? `#${report.ticket_number}` : report.id;
+    const confirmed = window.confirm(`¿Eliminar permanentemente el reporte ${ticket}: “${report.title}”?\\n\\nSe eliminarán también el historial y los registros de fotografías. Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
+    setSaving(true);
+    setError('');
+    setNotice('');
+    try {
+      const { data: photos, error: photosError } = await supabase
+        .from('report_photos').select('storage_path').eq('report_id', report.id);
+      if (photosError) throw photosError;
+
+      const { error: deleteError } = await supabase.rpc('dt_admin_delete_report', { p_report_id: report.id });
+      if (deleteError) throw deleteError;
+
+      let storageWarning = false;
+      const paths = (photos || []).map(p => p.storage_path).filter(Boolean);
+      if (paths.length) {
+        const { error: storageError } = await supabase.storage.from('report-photos').remove(paths);
+        if (storageError) {
+          console.error('Reporte eliminado; algunas fotografías podrían seguir almacenadas:', storageError);
+          storageWarning = true;
+        }
+      }
+      setReports(items => items.filter(item => item.id !== report.id));
+      setActive(null);
+      setNotice(storageWarning
+        ? 'Reporte eliminado. Algunas fotografías podrían requerir limpieza de almacenamiento.'
+        : 'Reporte eliminado correctamente, junto con su historial y registros de fotografías.');
+      await loadReports();
+    } catch (err) {
+      setError('No se pudo eliminar el reporte: ' + (err.message || 'Error inesperado.'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function signOut() {
     await detachDevice();
     await supabase.auth.signOut();
@@ -317,7 +359,7 @@ export default function App() {
 
         {view === 'reports' && (
           <ReportsView profile={profile} reports={reports} staff={staff} active={active} setActive={setActive}
-            onNew={() => setShowCreate(true)} onSaveFollowup={saveFollowup} saving={saving} loading={reportsLoading} />
+            onNew={() => setShowCreate(true)} onSaveFollowup={saveFollowup} onDeleteReport={deleteReport} saving={saving} loading={reportsLoading} />
         )}
         {view === 'admin' && profile.role === 'admin' && <AdminPanel onMessage={adminMessage} />}
         {view === 'report-format' && profile.role === 'admin' && <ReportFormatSettings profile={profile} onMessage={adminMessage} />}
