@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Building2, CheckCircle2, Plus, Save, Users, UserCheck, UserX } from 'lucide-react';
+import { Building2, CheckCircle2, Plus, Save, Users, UserCheck, UserX, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { fmtDate } from '../lib/constants';
 
@@ -68,6 +68,8 @@ export default function AdminPanel({ onMessage }) {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [name, setName] = useState('');
+  const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: '', role: 'customer' });
+  const [createBusy, setCreateBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -159,6 +161,24 @@ export default function AdminPanel({ onMessage }) {
     }
   }
 
+  async function createAccount(e) {
+    e.preventDefault();
+    if (!newUser.full_name.trim() || !newUser.email.trim() || newUser.password.length < 8 || !newUser.company_id) {
+      onMessage('error', 'Completa nombre, correo, contraseña (mínimo 8 caracteres) y empresa.'); return;
+    }
+    setCreateBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-create-user', { body: { full_name: newUser.full_name.trim(), email: newUser.email.trim(), password: newUser.password } });
+      if (error) throw error;
+      if (data?.error || !data?.user?.id) throw new Error(data?.error || 'No se confirmó la creación de la cuenta.');
+      const saved = await supabase.rpc('dt_admin_save_user', { p_user_id: data.user.id, p_company_id: newUser.company_id, p_role: newUser.role, p_is_active: true, p_full_name: newUser.full_name.trim() });
+      if (saved.error) throw new Error('La cuenta se creó, pero falló la asignación de empresa y rol: ' + saved.error.message);
+      setNewUser({ full_name: '', email: '', password: '', company_id: '', role: 'customer' });
+      await load(); onMessage('ok', 'Cuenta creada y configurada correctamente.');
+    } catch (error) { onMessage('error', 'No se pudo crear la cuenta: ' + (error?.message || 'Error inesperado.')); }
+    finally { setCreateBusy(false); }
+  }
+
   async function addCompany(e) {
     e.preventDefault();
     if (!name.trim()) return;
@@ -178,6 +198,18 @@ export default function AdminPanel({ onMessage }) {
     <section className="content-card" aria-labelledby="adm-title">
       <div className="section-head">
         <div><h2 id="adm-title">Empresas y usuarios</h2><p className="muted">Aprueba usuarios que confirmaron su correo, asígnales una empresa y define su rol desde aquí, sin entrar a Supabase.</p></div>
+      </div>
+      <div className="company-panel" style={{ marginBottom: 20 }}>
+        <h3><UserPlus size={18} aria-hidden="true" /> Crear cuenta desde DACATECH</h3>
+        <p className="muted">Registra un cliente, técnico o administrador y asígnale su empresa desde este panel.</p>
+        <form className="inline-form" onSubmit={createAccount}>
+          <label>Nombre completo<input value={newUser.full_name} onChange={e => setNewUser(v => ({ ...v, full_name: e.target.value }))} required maxLength={120} autoComplete="name" /></label>
+          <label>Correo electrónico<input type="email" value={newUser.email} onChange={e => setNewUser(v => ({ ...v, email: e.target.value }))} required autoComplete="email" /></label>
+          <label>Contraseña inicial<input type="password" value={newUser.password} onChange={e => setNewUser(v => ({ ...v, password: e.target.value }))} required minLength={8} autoComplete="new-password" /></label>
+          <label>Empresa<select value={newUser.company_id} onChange={e => setNewUser(v => ({ ...v, company_id: e.target.value }))} required><option value="">Seleccionar empresa</option>{companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label>
+          <label>Rol<select value={newUser.role} onChange={e => setNewUser(v => ({ ...v, role: e.target.value }))} required><option value="customer">Cliente</option><option value="technician">Técnico</option><option value="admin">Administrador</option></select></label>
+          <button className="primary-btn compact" disabled={createBusy || !companies.length}><UserPlus size={16} aria-hidden="true" /> {createBusy ? 'Creando cuenta…' : 'Crear cuenta'}</button>
+        </form>
       </div>
       <div className="filter-row" role="tablist" aria-label="Administración">
         <button type="button" role="tab" aria-selected={tab === 'users'} className={`chip ${tab === 'users' ? 'on' : ''}`} onClick={() => setTab('users')}><Users size={15} aria-hidden="true" /> Usuarios{pendingCount > 0 && ` (${pendingCount} pendientes)`}</button>
