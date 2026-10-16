@@ -36,7 +36,7 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
       <label>Rol
         <select value={role} onChange={e => setRole(e.target.value)}>
           <option value="customer">Cliente</option><option value="technician">Técnico</option>
-          {u.profile_exists && u.role === 'admin' && <option value="admin">Administrador</option>}
+          <option value="admin">Administrador</option>
         </select>
       </label>
       <label>Empresa
