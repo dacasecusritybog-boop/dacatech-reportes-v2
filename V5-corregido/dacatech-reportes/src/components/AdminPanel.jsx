@@ -9,7 +9,7 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
   const [active, setActive] = useState(u.profile_exists ? Boolean(u.is_active) : true);
   const [fullName, setFullName] = useState(u.full_name || '');
   const [busy, setBusy] = useState(false);
-  const pending = !u.profile_exists || !u.company_id;
+  const pending = (!u.profile_exists && u.is_active) || !u.company_id;
   const dirty = role !== (u.role || 'customer') || String(company) !== String(u.company_id ?? '') ||
     active !== Boolean(u.is_active) || fullName !== (u.full_name || '');
 
@@ -155,8 +155,8 @@ export default function AdminPanel({ onMessage }) {
     else { setName(''); onMessage('ok', 'Empresa creada.'); await load(); }
   }
 
-  const pendingCount = users.filter(u => !u.profile_exists || !u.is_active || !u.company_id).length;
-  const pendingUsers = users.filter(u => !u.profile_exists || !u.is_active || !u.company_id);
+  const pendingCount = users.filter(u => (!u.profile_exists && u.is_active) || !u.company_id).length;
+  const pendingUsers = users.filter(u => (!u.profile_exists && u.is_active) || !u.company_id);
 
   return (
     <section className="content-card" aria-labelledby="adm-title">
