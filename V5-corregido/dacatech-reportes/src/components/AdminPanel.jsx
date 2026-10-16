@@ -52,7 +52,7 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
           {u.profile_exists ? <Save size={16} aria-hidden="true" /> : <UserCheck size={16} aria-hidden="true" />}
           {busy ? 'Guardando…' : u.profile_exists ? 'Guardar cambios' : 'Aprobar usuario'}
         </button>
-        {u.role === 'customer' && u.is_active && (
+        {u.is_active && (
           <button type="button" className="secondary-btn compact" disabled={busy}
             onClick={() => onDeactivate({ ...u, company_id: company || u.company_id, full_name: fullName })}>
             <UserX size={16} aria-hidden="true" /> Dar de baja
@@ -117,7 +117,7 @@ export default function AdminPanel({ onMessage }) {
   }
 
   async function deactivateCustomer(user) {
-    if (user.role !== 'customer' || !user.company_id) { onMessage('error', 'Selecciona una empresa antes de dar de baja al cliente.'); return; }
+    if (!user.company_id) { onMessage('error', 'Selecciona una empresa antes de cambiar el estado del usuario.'); return; }
     const nextActive = !user.is_active;
     const confirmed = window.confirm(nextActive
       ? `¿Activar a ${user.full_name || user.email}? Podrá volver a ingresar a DACATECH Reportes.`
@@ -127,7 +127,7 @@ export default function AdminPanel({ onMessage }) {
       const result = await supabase.rpc('dt_admin_save_user', {
         p_user_id: user.id,
         p_company_id: user.company_id,
-        p_role: 'customer',
+        p_role: user.role || 'customer',
         p_is_active: nextActive,
         p_full_name: user.full_name || null
       });
@@ -137,8 +137,8 @@ export default function AdminPanel({ onMessage }) {
       }
       await load();
       onMessage('ok', nextActive
-        ? 'Cliente activado correctamente.'
-        : 'Cliente dado de baja. Sus reportes e historial se conservaron.');
+        ? 'Usuario activado correctamente.'
+        : 'Usuario dado de baja. Sus reportes e historial se conservaron.');
     } catch (error) {
       onMessage('error', 'No se pudo cambiar el estado del cliente: ' + (error?.message || 'Error inesperado.'));
       await load();
