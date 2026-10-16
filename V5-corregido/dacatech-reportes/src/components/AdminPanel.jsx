@@ -52,10 +52,10 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
           {u.profile_exists ? <Save size={16} aria-hidden="true" /> : <UserCheck size={16} aria-hidden="true" />}
           {busy ? 'Guardando…' : u.profile_exists ? 'Guardar cambios' : 'Aprobar usuario'}
         </button>
-        {u.profile_exists && u.role === 'customer' && u.is_active && (
+        {u.profile_exists && u.role === 'customer' && (
           <button type="button" className="secondary-btn compact" disabled={busy}
             onClick={() => onDeactivate(u)}>
-            <UserX size={16} aria-hidden="true" /> Dar de baja
+            <UserX size={16} aria-hidden="true" /> {u.is_active ? 'Dar de baja' : 'Activar cliente'}
           </button>
         )}
       </div>
@@ -117,25 +117,30 @@ export default function AdminPanel({ onMessage }) {
   }
 
   async function deactivateCustomer(user) {
-    if (user.role !== 'customer' || !user.is_active) return;
-    const confirmed = window.confirm(`¿Dar de baja a ${user.full_name || user.email}?\\n\\nSe bloqueará su acceso a DACATECH Reportes. Sus reportes e historial se conservarán.`);
+    if (user.role !== 'customer' || !user.profile_exists) return;
+    const nextActive = !user.is_active;
+    const confirmed = window.confirm(nextActive
+      ? `¿Activar a ${user.full_name || user.email}? Podrá volver a ingresar a DACATECH Reportes.`
+      : `¿Dar de baja a ${user.full_name || user.email}?\n\nSe bloqueará su acceso a DACATECH Reportes. Sus reportes e historial se conservarán.`);
     if (!confirmed) return;
     try {
       const result = await supabase.rpc('dt_admin_save_user', {
         p_user_id: user.id,
         p_company_id: user.company_id,
         p_role: 'customer',
-        p_is_active: false,
+        p_is_active: nextActive,
         p_full_name: user.full_name || null
       });
       if (result.error) throw result.error;
-      if (!result.data || result.data.id !== user.id || result.data.is_active !== false) {
-        throw new Error('Supabase no confirmó la baja del cliente.');
+      if (!result.data || result.data.id !== user.id || result.data.is_active !== nextActive) {
+        throw new Error('Supabase no confirmó el cambio de estado del cliente.');
       }
       await load();
-      onMessage('ok', 'Cliente dado de baja. Sus reportes e historial se conservaron.');
+      onMessage('ok', nextActive
+        ? 'Cliente activado correctamente.'
+        : 'Cliente dado de baja. Sus reportes e historial se conservaron.');
     } catch (error) {
-      onMessage('error', 'No se pudo dar de baja al cliente: ' + (error?.message || 'Error inesperado.'));
+      onMessage('error', 'No se pudo cambiar el estado del cliente: ' + (error?.message || 'Error inesperado.'));
       await load();
     }
   }
