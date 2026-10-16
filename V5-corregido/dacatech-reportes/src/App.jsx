@@ -8,6 +8,7 @@ import ReportsView from './components/ReportsView';
 import CreateReportModal from './components/CreateReportModal';
 import AdminPanel from './components/AdminPanel';
 import AccountView from './components/AccountView';
+import ReportFormatSettings from './components/ReportFormatSettings';
 import NotificationCard from './components/NotificationCard';
 import Toasts from './components/Toasts';
 import CookieNotice from './components/CookieNotice';
@@ -271,12 +272,12 @@ export default function App() {
 
   const navItems = [
     { id: 'reports', label: 'Reportes', icon: <ClipboardList size={18} aria-hidden="true" />, count: reports.length },
-    ...(profile.role === 'admin' ? [{ id: 'admin', label: 'Empresas y usuarios', short: 'Admin', icon: <Users size={18} aria-hidden="true" /> }] : []),
+    ...(profile.role === 'admin' ? [{ id: 'admin', label: 'Empresas y usuarios', short: 'Admin', icon: <Users size={18} aria-hidden="true" /> }, { id: 'report-format', label: 'Formato de informes', short: 'Formato', icon: <ClipboardList size={18} aria-hidden="true" /> }] : []),
     { id: 'account', label: 'Mi cuenta', short: 'Cuenta', icon: <UserCircle size={18} aria-hidden="true" /> },
   ];
 
   const showPushBanner = view === 'reports' && !bannerHidden && push.configured && (push.needsIOSInstall || (push.supported && push.permission === 'default' && !push.subscribed));
-  const titles = { reports: profile.role === 'customer' ? 'Mis reportes' : 'Panel de reportes', admin: 'Administración', account: 'Mi cuenta' };
+  const titles = { reports: profile.role === 'customer' ? 'Mis reportes' : 'Panel de reportes', admin: 'Administración', 'report-format': 'Formato de informes', account: 'Mi cuenta' };
 
   return shell(
     <div className="app-shell">
@@ -319,6 +320,7 @@ export default function App() {
             onNew={() => setShowCreate(true)} onSaveFollowup={saveFollowup} saving={saving} loading={reportsLoading} />
         )}
         {view === 'admin' && profile.role === 'admin' && <AdminPanel onMessage={adminMessage} />}
+        {view === 'report-format' && profile.role === 'admin' && <ReportFormatSettings profile={profile} onMessage={adminMessage} />}
         {view === 'account' && <AccountView profile={profile} session={session} push={push} onSignOut={signOut} onOpenLegal={setLegal} />}
       </main>
 
