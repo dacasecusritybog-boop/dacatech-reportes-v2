@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Building2, CheckCircle2, Plus, Save, Users, UserCheck } from 'lucide-react';
+import { Building2, CheckCircle2, Plus, Save, Users, UserCheck, UserX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { fmtDate } from '../lib/constants';
 
-function UserRow({ u, companies, onSave }) {
+function UserRow({ u, companies, onSave, onDeactivate }) {
   const [role, setRole] = useState(u.role || 'customer');
   const [company, setCompany] = useState(u.company_id ?? '');
   const [active, setActive] = useState(u.profile_exists ? Boolean(u.is_active) : true);
@@ -46,11 +46,19 @@ function UserRow({ u, companies, onSave }) {
         </select>
       </label>
       <label className="check-row inline"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /><span>Activo</span></label>
-      <button type="button" className="primary-btn compact" disabled={busy || !company || (u.profile_exists && !dirty)}
-        onClick={submit}>
-        {u.profile_exists ? <Save size={16} aria-hidden="true" /> : <UserCheck size={16} aria-hidden="true" />}
-        {busy ? 'Guardando…' : u.profile_exists ? 'Guardar cambios' : 'Aprobar usuario'}
-      </button>
+      <div className="user-actions">
+        <button type="button" className="primary-btn compact" disabled={busy || !company || (u.profile_exists && !dirty)}
+          onClick={submit}>
+          {u.profile_exists ? <Save size={16} aria-hidden="true" /> : <UserCheck size={16} aria-hidden="true" />}
+          {busy ? 'Guardando…' : u.profile_exists ? 'Guardar cambios' : 'Aprobar usuario'}
+        </button>
+        {u.profile_exists && u.role === 'customer' && u.is_active && (
+          <button type="button" className="secondary-btn compact" disabled={busy}
+            onClick={() => onDeactivate(u)}>
+            <UserX size={16} aria-hidden="true" /> Dar de baja
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -108,6 +116,30 @@ export default function AdminPanel({ onMessage }) {
     }
   }
 
+  async function deactivateCustomer(user) {
+    if (user.role !== 'customer' || !user.is_active) return;
+    const confirmed = window.confirm(`¿Dar de baja a ${user.full_name || user.email}?\\n\\nSe bloqueará su acceso a DACATECH Reportes. Sus reportes e historial se conservarán.`);
+    if (!confirmed) return;
+    try {
+      const result = await supabase.rpc('dt_admin_save_user', {
+        p_user_id: user.id,
+        p_company_id: user.company_id,
+        p_role: 'customer',
+        p_is_active: false,
+        p_full_name: user.full_name || null
+      });
+      if (result.error) throw result.error;
+      if (!result.data || result.data.id !== user.id || result.data.is_active !== false) {
+        throw new Error('Supabase no confirmó la baja del cliente.');
+      }
+      await load();
+      onMessage('ok', 'Cliente dado de baja. Sus reportes e historial se conservaron.');
+    } catch (error) {
+      onMessage('error', 'No se pudo dar de baja al cliente: ' + (error?.message || 'Error inesperado.'));
+      await load();
+    }
+  }
+
   async function addCompany(e) {
     e.preventDefault();
     if (!name.trim()) return;
@@ -134,7 +166,7 @@ export default function AdminPanel({ onMessage }) {
         <div className="user-list">
           {pendingUsers.length > 0 && <h3>Solicitudes pendientes ({pendingUsers.length})</h3>}
           {users.length === 0 && <div className="empty-state"><p>No hay usuarios registrados todavía.</p></div>}
-          {users.map(u => <UserRow key={u.id} u={u} companies={companies} onSave={saveUser} />)}
+          {users.map(u => <UserRow key={u.id} u={u} companies={companies} onSave={saveUser} onDeactivate={deactivateCustomer} />)}
         </div>
       ) : (
         <div className="company-panel">
