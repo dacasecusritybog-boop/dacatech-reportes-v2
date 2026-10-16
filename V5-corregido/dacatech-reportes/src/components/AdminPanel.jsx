@@ -52,10 +52,10 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
           {u.profile_exists ? <Save size={16} aria-hidden="true" /> : <UserCheck size={16} aria-hidden="true" />}
           {busy ? 'Guardando…' : u.profile_exists ? 'Guardar cambios' : 'Aprobar usuario'}
         </button>
-        {u.role === 'customer' && (
+        {u.role === 'customer' && u.is_active && (
           <button type="button" className="secondary-btn compact" disabled={busy}
             onClick={() => onDeactivate({ ...u, company_id: company || u.company_id, full_name: fullName })}>
-            <UserX size={16} aria-hidden="true" /> {u.is_active ? 'Dar de baja' : 'Activar cliente'}
+            <UserX size={16} aria-hidden="true" /> Dar de baja
           </button>
         )}
       </div>
@@ -155,8 +155,10 @@ export default function AdminPanel({ onMessage }) {
     else { setName(''); onMessage('ok', 'Empresa creada.'); await load(); }
   }
 
-  const pendingCount = users.filter(u => Boolean(u.is_active) && (!u.profile_exists || !u.company_id)).length;
-  const pendingUsers = users.filter(u => Boolean(u.is_active) && (!u.profile_exists || !u.company_id));
+  // Los clientes dados de baja desaparecen de la lista de gestión; sus perfiles e historial se conservan.
+  const visibleUsers = users.filter(u => !(u.role === 'customer' && u.is_active === false));
+  const pendingCount = visibleUsers.filter(u => Boolean(u.is_active) && (!u.profile_exists || !u.company_id)).length;
+  const pendingUsers = visibleUsers.filter(u => Boolean(u.is_active) && (!u.profile_exists || !u.company_id));
 
   return (
     <section className="content-card" aria-labelledby="adm-title">
@@ -170,8 +172,8 @@ export default function AdminPanel({ onMessage }) {
       {loading ? <div className="empty-state"><div className="spinner" /></div> : tab === 'users' ? (
         <div className="user-list">
           {pendingUsers.length > 0 && <h3>Solicitudes pendientes ({pendingUsers.length})</h3>}
-          {users.length === 0 && <div className="empty-state"><p>No hay usuarios registrados todavía.</p></div>}
-          {users.map(u => <UserRow key={u.id} u={u} companies={companies} onSave={saveUser} onDeactivate={deactivateCustomer} />)}
+          {visibleUsers.length === 0 && <div className="empty-state"><p>No hay usuarios activos para mostrar.</p></div>}
+          {visibleUsers.map(u => <UserRow key={u.id} u={u} companies={companies} onSave={saveUser} onDeactivate={deactivateCustomer} />)}
         </div>
       ) : (
         <div className="company-panel">
