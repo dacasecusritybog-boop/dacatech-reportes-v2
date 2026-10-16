@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, AlertCircle, ArrowRight, CheckCircle2, ClipboardList, Clock3, FileDown, FileText, Plus, Search, Ticket, UploadCloud, X } from 'lucide-react';
+import { Activity, AlertCircle, ArrowRight, CheckCircle2, ClipboardList, Clock3, FileDown, FileText, Plus, Search, Ticket, Trash2, UploadCloud, X } from 'lucide-react';
 import PhotoGallery from './PhotoGallery';
 import { fmtDate, roleLabel, statusClass, statuses } from '../lib/constants';
 
@@ -100,7 +100,7 @@ const FILTERS = [
   ['cerrados', 'Cerrados'],
 ];
 
-export default function ReportsView({ profile, reports, staff, active, setActive, onNew, onSaveFollowup, saving, loading }) {
+export default function ReportsView({ profile, reports, staff, active, setActive, onNew, onSaveFollowup, onDeleteReport, saving, loading }) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('todos');
   const isStaff = profile.role !== 'customer';
@@ -196,6 +196,7 @@ export default function ReportsView({ profile, reports, staff, active, setActive
          <div className="export-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '18px' }}>
   <button type="button" className="primary-btn" onClick={() => exportReport(current, 'word', profile.company_id)}><FileText size={17} aria-hidden="true" /> Descargar Word</button>
   <button type="button" className="secondary-btn" onClick={() => exportReport(current, 'pdf', profile.company_id)}><FileDown size={17} aria-hidden="true" /> Descargar PDF</button>
+  {profile.role === 'admin' && <button type="button" className="secondary-btn" style={{ borderColor: '#dc2626', color: '#b91c1c' }} onClick={() => onDeleteReport?.(current)}><Trash2 size={17} aria-hidden="true" /> Eliminar reporte</button>}
 </div>
           <div className="detail-grid">
             <div><span className="detail-label">Tipo de servicio</span><b>{current.category}</b></div>
