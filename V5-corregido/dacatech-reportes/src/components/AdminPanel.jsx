@@ -46,7 +46,7 @@ function UserRow({ u, companies, onSave }) {
         </select>
       </label>
       <label className="check-row inline"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /><span>Activo</span></label>
-      <button type="button" className="primary-btn compact" disabled={busy || (u.profile_exists ? !dirty : !company)}
+      <button type="button" className="primary-btn compact" disabled={busy || !company || (u.profile_exists && !dirty)}
         onClick={submit}>
         {u.profile_exists ? <Save size={16} aria-hidden="true" /> : <UserCheck size={16} aria-hidden="true" />}
         {busy ? 'Guardando…' : u.profile_exists ? 'Guardar cambios' : 'Aprobar usuario'}
