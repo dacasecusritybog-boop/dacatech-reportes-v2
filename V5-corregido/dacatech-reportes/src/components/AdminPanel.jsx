@@ -6,7 +6,7 @@ import { fmtDate } from '../lib/constants';
 function UserRow({ u, companies, onSave }) {
   const [role, setRole] = useState(u.role || 'customer');
   const [company, setCompany] = useState(u.company_id ?? '');
-  const [active, setActive] = useState(Boolean(u.is_active));
+  const [active, setActive] = useState(u.profile_exists ? Boolean(u.is_active) : true);
   const [fullName, setFullName] = useState(u.full_name || '');
   const [busy, setBusy] = useState(false);
   const pending = !u.profile_exists || !u.is_active || !u.company_id;
@@ -45,7 +45,7 @@ function UserRow({ u, companies, onSave }) {
           {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </label>
-      {u.profile_exists && <label className="check-row inline"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /><span>Activo</span></label>}
+      <label className="check-row inline"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /><span>Activo</span></label>
       <button type="button" className="primary-btn compact" disabled={busy || (u.profile_exists ? !dirty : !company)}
         onClick={submit}>
         {u.profile_exists ? <Save size={16} aria-hidden="true" /> : <UserCheck size={16} aria-hidden="true" />}
