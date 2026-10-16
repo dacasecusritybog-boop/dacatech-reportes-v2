@@ -97,6 +97,52 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, [loadProfile]);
 
+  // Revocar el acceso en la sesión abierta en cuanto el administrador dé de baja al usuario.
+  useEffect(() => {
+    if (!supabase || !session?.user?.id) return;
+    let checking = false;
+    const enforceActiveStatus = async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const { data, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_active')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        if (!profileError && (!data || data.is_active !== true)) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setProfile(null);
+          setReports([]);
+          setActive(null);
+          setView('reports');
+          setError('Tu acceso a DACATECH Reportes fue desactivado por el administrador.');
+        }
+      } finally {
+        checking = false;
+      }
+    };
+    const channel = supabase.channel('dt-profile-status-' + session.user.id)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'profiles',
+        filter: 'id=eq.' + session.user.id
+      }, (payload) => {
+        if (payload.new?.is_active !== true) void enforceActiveStatus();
+      })
+      .subscribe();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void enforceActiveStatus();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', enforceActiveStatus);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', enforceActiveStatus);
+      void supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id]);
+
   /* ---------- datos ---------- */
   const loadReports = useCallback(async () => {
     if (!supabase || !profile) return;
