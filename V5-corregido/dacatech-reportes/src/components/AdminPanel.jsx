@@ -168,13 +168,32 @@ export default function AdminPanel({ onMessage }) {
     }
     setCreateBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-create-user', { body: { full_name: newUser.full_name.trim(), email: newUser.email.trim(), password: newUser.password } });
-      if (error) throw error;
-      if (data?.error || !data?.user?.id) throw new Error(data?.error || 'No se confirmó la creación de la cuenta.');
-      const saved = await supabase.rpc('dt_admin_save_user', { p_user_id: data.user.id, p_company_id: newUser.company_id, p_role: newUser.role, p_is_active: true, p_full_name: newUser.full_name.trim() });
-      if (saved.error) throw new Error('La cuenta se creó, pero falló la asignación de empresa y rol: ' + saved.error.message);
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          full_name: newUser.full_name.trim(),
+          email: newUser.email.trim(),
+          password: newUser.password,
+          company_id: newUser.company_id,
+          role: newUser.role
+        }
+      });
+      if (error) {
+        let detail = error.message || 'Error inesperado.';
+        try {
+          const response = error.context;
+          if (response && typeof response.json === 'function') {
+            const payload = await response.json();
+            if (payload?.error) detail = payload.error;
+          }
+        } catch { /* conservar el mensaje disponible */ }
+        throw new Error(detail);
+      }
+      if (data?.error || !data?.user?.id || data?.user?.company_id !== newUser.company_id || data?.user?.role !== newUser.role) {
+        throw new Error(data?.error || 'El servidor no confirmó la cuenta con la empresa y el rol seleccionados.');
+      }
       setNewUser({ full_name: '', email: '', password: '', company_id: '', role: 'customer' });
-      await load(); onMessage('ok', 'Cuenta creada y configurada correctamente.');
+      await load();
+      onMessage('ok', 'Cuenta creada, vinculada a su empresa y configurada con el rol seleccionado.');
     } catch (error) { onMessage('error', 'No se pudo crear la cuenta: ' + (error?.message || 'Error inesperado.')); }
     finally { setCreateBusy(false); }
   }
