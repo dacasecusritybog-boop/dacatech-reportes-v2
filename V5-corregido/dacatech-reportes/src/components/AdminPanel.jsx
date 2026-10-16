@@ -77,51 +77,35 @@ export default function AdminPanel({ onMessage }) {
 
   async function saveUser(id, patch) {
     if (!patch.company_id) {
-      onMessage('error', 'Selecciona una empresa antes de aprobar al usuario.');
+      onMessage('error', 'Selecciona una empresa antes de guardar.');
       return;
     }
 
-    const current = users.find(u => u.id === id);
-    let error = null;
-    let savedProfile = null;
-
-    // El RPC devuelve el perfil confirmado y evita el falso éxito de UPDATE
-    // cuando RLS no permite modificar ninguna fila.
-    if (patch.role === 'customer' || patch.role === 'technician') {
-      const result = await supabase.rpc('dt_admin_approve_user', {
+    try {
+      const result = await supabase.rpc('dt_admin_save_user', {
         p_user_id: id,
         p_company_id: patch.company_id,
         p_role: patch.role,
+        p_is_active: patch.is_active,
         p_full_name: patch.full_name || null
       });
-      error = result.error;
-      savedProfile = result.data;
-      if (!error && (!savedProfile || savedProfile.is_active !== true ||
-          savedProfile.company_id !== patch.company_id || savedProfile.id !== id)) {
-        error = new Error('Supabase no confirmó la activación del usuario. Recarga y verifica el estado antes de continuar.');
+
+      if (result.error) throw result.error;
+
+      const saved = result.data;
+      if (!saved || saved.id !== id || saved.is_active !== Boolean(patch.is_active) ||
+          saved.company_id !== patch.company_id || saved.role !== patch.role) {
+        throw new Error('Supabase no confirmó todos los cambios. Recarga la lista y verifica el usuario.');
       }
-    } else if (current?.profile_exists && current.role === 'admin') {
-      const result = await supabase.from('profiles')
-        .update({ role: 'admin', company_id: patch.company_id, is_active: patch.is_active, full_name: patch.full_name })
-        .eq('id', id)
-        .select('id,role,company_id,is_active')
-        .maybeSingle();
-      error = result.error;
-      if (!error && !result.data) error = new Error('No se modificó el perfil. Comprueba tus permisos y vuelve a intentarlo.');
-      savedProfile = result.data;
-    } else {
-      error = new Error('No se puede asignar ese rol a este usuario.');
-    }
 
-    if (error) {
-      onMessage('error', 'No se pudo guardar la aprobación: ' + (error.message || String(error)));
-      return;
+      await load();
+      onMessage('ok', saved.is_active
+        ? 'Usuario activado y cambios confirmados en la base de datos.'
+        : 'Cambios guardados y estado inactivo confirmado.');
+    } catch (error) {
+      onMessage('error', 'No se pudo guardar el usuario: ' + (error?.message || 'Error inesperado.'));
+      await load();
     }
-
-    await load();
-    onMessage('ok', savedProfile?.is_active
-      ? 'Aprobación confirmada: usuario activo y empresa asignada.'
-      : 'Cambios guardados y verificados.');
   }
 
   async function addCompany(e) {
