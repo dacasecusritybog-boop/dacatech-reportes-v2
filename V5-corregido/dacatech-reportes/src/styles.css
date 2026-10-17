@@ -235,3 +235,19 @@ html,body,#root{margin:0;width:100%;min-width:0;max-width:100%;overflow-x:hidden
  .auth-card{margin-top:clamp(160px,30svh,220px)!important;padding-top:17px!important;padding-bottom:15px!important}
  .auth-card .form-stack{gap:9px!important}
 }
+
+/* Correct the failed reference layout: brand below iOS status area and compact card. */
+@media(max-width:700px){
+ .auth-layout{position:relative;min-height:100svh;min-height:100dvh;box-sizing:border-box;padding-top:calc(env(safe-area-inset-top,0px) + 18px)!important;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px)!important;justify-content:flex-start!important;overflow-x:hidden}
+ .auth-tech-backdrop{position:absolute;top:0;left:0;right:0;height:58svh!important;min-height:390px!important;max-height:520px!important;background-color:#06172b!important;background-position:center 42%!important}
+ .auth-brand-title{top:calc(env(safe-area-inset-top,0px) + 100px)!important;left:14px!important;right:14px!important}
+ .auth-brand-title strong{font-size:clamp(38px,10vw,54px)!important;line-height:1.05!important}
+ .auth-brand-title i{margin:12px auto 14px!important}
+ .auth-brand-title small{line-height:2!important}
+ .auth-card{position:relative;z-index:2;margin:clamp(300px,47svh,410px) auto 0!important;width:100%;max-width:480px;flex-shrink:0}
+}
+@media(max-height:760px) and (max-width:700px){
+ .auth-tech-backdrop{height:48svh!important;min-height:320px!important}
+ .auth-brand-title{top:calc(env(safe-area-inset-top,0px) + 74px)!important}
+ .auth-card{margin-top:clamp(245px,39svh,315px)!important}
+}
