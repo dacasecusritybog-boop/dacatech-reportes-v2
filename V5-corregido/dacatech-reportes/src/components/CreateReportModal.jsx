@@ -12,14 +12,14 @@ export default function CreateReportModal({ onClose, onSubmit, saving, error }) 
   const [files, setFiles] = useState([]);
 
   return (
-    <Modal eyebrow="NUEVA SOLICITUD" title="Crear reporte de servicio" subtitle="Cuéntanos qué está pasando y adjunta fotos si las tienes." onClose={onClose}>
+    <Modal eyebrow="NUEVA SOLICITUD" title="Crear solicitud de servicio" subtitle="Describe lo que necesitas y adjunta evidencias si están disponibles." onClose={onClose}>
       {error && <div className="error-msg" role="alert">{error}</div>}
       <form className="form-stack" onSubmit={(e) => { e.preventDefault(); onSubmit({ title, category, priority, location, description, files }); }}>
-        <label>Título del reporte
-          <input data-autofocus value={title} onChange={(e) => setTitle(e.target.value)} minLength={3} maxLength={140} required placeholder="Ej. Cámara sin señal en recepción" />
+        <label>Título de la solicitud
+          <input data-autofocus value={title} onChange={(e) => setTitle(e.target.value)} minLength={3} maxLength={140} required placeholder="Ej. Solicitud de mantenimiento o apoyo" />
         </label>
         <div className="two-col">
-          <label>Tipo de servicio
+          <label>Área o tipo de servicio
             <select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c}>{c}</option>)}</select>
           </label>
           <label>Prioridad
@@ -30,7 +30,7 @@ export default function CreateReportModal({ onClose, onSubmit, saving, error }) 
           <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Sede, piso, zona o dirección" />
         </label>
         <label>Descripción
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} minLength={3} maxLength={4000} required rows="4" placeholder="Describe la falla, desde cuándo ocurre y qué afecta…" />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} minLength={3} maxLength={4000} required rows="4" placeholder="Describe la necesidad, el contexto y el resultado esperado…" />
         </label>
         <label className="upload-box">
           <ImagePlus size={22} aria-hidden="true" />
@@ -46,7 +46,7 @@ export default function CreateReportModal({ onClose, onSubmit, saving, error }) 
         )}
         <div className="modal-actions">
           <button type="button" className="secondary-btn" onClick={onClose}>Cancelar</button>
-          <button className="primary-btn" disabled={saving}>{saving ? 'Enviando…' : 'Enviar reporte'} <ArrowRight size={17} aria-hidden="true" /></button>
+          <button className="primary-btn" disabled={saving}>{saving ? 'Enviando…' : 'Enviar solicitud'} <ArrowRight size={17} aria-hidden="true" /></button>
         </div>
       </form>
     </Modal>
