@@ -9,7 +9,7 @@ const htmlEscape = (value = '') => String(value).replace(/[&<>"']/g, (c) => ({
 }[c]));
 
 async function reportDocumentHtml(report, settings = {}) {
-  const cfg = { report_title: 'INFORME DE SERVICIO TÉCNICO', header_text: 'DACATECH · Reportes', footer_text: 'DACATECH REPORTES · Informe generado desde el sistema. Verifique los datos antes de entregar.', primary_color: '#0878e8', accent_color: '#111827', show_logo: true, show_report_number: true, show_priority: true, show_status: true, show_description: true, show_resolution: true, show_history: true, show_customer_photos: true, show_service_photos: true, page_size: 'A4', ...settings };
+  const cfg = { report_title: 'INFORME DE SERVICIO', header_text: 'Gestión de servicios', footer_text: 'Informe generado desde la plataforma. Verifique los datos antes de entregar.', primary_color: '#0878e8', accent_color: '#111827', show_logo: true, show_report_number: true, show_priority: true, show_status: true, show_description: true, show_resolution: true, show_history: true, show_customer_photos: true, show_service_photos: true, page_size: 'A4', ...settings };
   const updates = (report.report_updates || []).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   let photos = [];
   if (report.report_photos?.length) {
@@ -40,21 +40,21 @@ async function reportDocumentHtml(report, settings = {}) {
   const photoHtml = visiblePhotos.length
     ? visiblePhotos.map((p) => p.dataUrl ? `<figure><img src="${p.dataUrl}" alt="Evidencia del reporte"><figcaption>${htmlEscape(p.photo_type === 'service' ? 'Evidencia de atención' : 'Foto inicial')}${p.caption ? ` — ${htmlEscape(p.caption)}` : ''}</figcaption></figure>` : `<p>${htmlEscape(p.caption || 'Fotografía adjunta (no disponible para incrustar)')}</p>`).join('')
     : '<p>No hay fotografías disponibles.</p>';
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Reporte DACATECH #${htmlEscape(report.ticket_number)}</title>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Informe de servicio #${htmlEscape(report.ticket_number)}</title>
   <style>@page{size:${cfg.page_size === 'Letter' ? 'Letter' : 'A4'};margin:18mm}body{font-family:Arial,sans-serif;color:#182334;margin:32px;font-size:11pt}h1{color:${htmlEscape(cfg.primary_color)};font-size:22pt;margin-bottom:4px}h2{font-size:14pt;border-bottom:1px solid #ccd6e2;padding-bottom:6px;margin-top:24px}.brand{letter-spacing:3px;color:${htmlEscape(cfg.primary_color)};font-weight:bold}.muted{color:#596b80}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{padding:10px;border:1px solid #d9e2ec;border-radius:6px}.label{display:block;color:#596b80;font-size:9pt;margin-bottom:4px}.text{white-space:pre-wrap;line-height:1.5}figure{margin:14px 0;page-break-inside:avoid}img{max-width:100%;max-height:520px;object-fit:contain}figcaption{font-size:9pt;color:#596b80;margin-top:5px}.footer{margin-top:30px;border-top:1px solid #ccd6e2;padding-top:8px;font-size:9pt;color:#596b80}@media print{body{margin:18mm}}</style></head><body>
-  ${cfg.show_logo && cfg.logo_url ? `<img class="logo" src="${htmlEscape(cfg.logo_url)}" alt="Logo" style="max-width:180px;max-height:80px;object-fit:contain">` : ''}<div class="brand">${htmlEscape(cfg.header_text || 'DACATECH · Reportes')}</div><h1>${htmlEscape(cfg.report_title)}${cfg.show_report_number ? ` · #${htmlEscape(report.ticket_number)}` : ''} — ${htmlEscape(report.title)}</h1><p class="muted">Documento generado: ${htmlEscape(new Date().toLocaleString('es-CO'))}</p>
-  <h2>Datos del servicio</h2><div class="grid">
+  ${cfg.show_logo && cfg.logo_url ? `<img class="logo" src="${htmlEscape(cfg.logo_url)}" alt="Logo" style="max-width:180px;max-height:80px;object-fit:contain">` : ''}<div class="brand">${htmlEscape(cfg.header_text || 'Gestión de servicios')}</div><h1>${htmlEscape(cfg.report_title)}${cfg.show_report_number ? ` · #${htmlEscape(report.ticket_number)}` : ''} — ${htmlEscape(report.title)}</h1><p class="muted">Documento generado: ${htmlEscape(new Date().toLocaleString('es-CO'))}</p>
+  <h2>Datos de la solicitud</h2><div class="grid">
   <div class="field"><span class="label">Cliente / empresa</span>${htmlEscape(report.companies?.name || 'No especificado')}</div>
-  <div class="field"><span class="label">Tipo de servicio</span>${htmlEscape(report.category)}</div>
+  <div class="field"><span class="label">Área o tipo de servicio</span>${htmlEscape(report.category)}</div>
   <div class="field"><span class="label">Ubicación</span>${htmlEscape(report.location || 'No especificada')}</div>
   ${cfg.show_priority ? `<div class="field"><span class="label">Prioridad</span>${htmlEscape(report.priority)}</div>` : ''}
   ${cfg.show_status ? `<div class="field"><span class="label">Estado</span>${htmlEscape(report.status)}</div>` : ''}
   <div class="field"><span class="label">Fecha de creación</span>${htmlEscape(fmtDate(report.created_at))}</div>
   ${lastUpdate ? `<div class="field"><span class="label">Último seguimiento registrado</span>${htmlEscape(fmtDate(lastUpdate.created_at))}</div>` : ''}
   </div>
-  ${cfg.show_description ? `<h2>Descripción de la novedad</h2><div class="text">${htmlEscape(report.description || '')}</div>` : ''}
+  ${cfg.show_description ? `<h2>Descripción de la solicitud</h2><div class="text">${htmlEscape(report.description || '')}</div>` : ''}
   ${cfg.show_resolution ? `<h2>Solución / trabajo realizado</h2><div class="text">${htmlEscape(report.resolution_summary || 'No se registró resumen de solución.')}</div>` : ''}
-  ${cfg.show_history ? `<h2>Historial de seguimiento</h2>${updates.length ? updates.map((u) => `<p><b>${htmlEscape(u.author_name || 'Equipo DACATECH')}</b> — ${htmlEscape(fmtDate(u.created_at))}<br><span class="text">${htmlEscape(u.message || '')}</span></p>`).join('') : '<p>No hay seguimientos registrados.</p>'}` : ''}
+  ${cfg.show_history ? `<h2>Historial de seguimiento</h2>${updates.length ? updates.map((u) => `<p><b>${htmlEscape(u.author_name || 'Equipo responsable')}</b> — ${htmlEscape(fmtDate(u.created_at))}<br><span class="text">${htmlEscape(u.message || '')}</span></p>`).join('') : '<p>No hay seguimientos registrados.</p>'}` : ''}
   <h2>Fotografías y evidencias</h2>${photoHtml}
   <div class="footer">${htmlEscape(cfg.footer_text)}</div></body></html>`;
 }
@@ -84,7 +84,7 @@ async function exportReport(report, format, companyId) {
     }
   } catch (error) {
     if (popup) popup.close();
-    alert('No se pudo generar el informe. Inténtalo nuevamente.');
+    alert('No se pudo generar el documento. Inténtalo nuevamente.');
     console.error('Export report', error);
   }
 }
@@ -134,14 +134,14 @@ export default function ReportsView({ profile, reports, staff, active, setActive
   }, [current?.id]); // eslint-disable-line
 
   const timeline = current ? [
-    { id: 'creado', author_name: 'Reporte creado', message: current.companies?.name ? `Registrado por ${current.companies.name}.` : 'Reporte registrado.', created_at: current.created_at },
+    { id: 'creado', author_name: 'Solicitud creada', message: current.companies?.name ? `Registrado por ${current.companies.name}.` : 'Solicitud registrada.', created_at: current.created_at },
     ...(current.report_updates || []).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
   ] : [];
 
   return (
     <>
       <section className="stats-grid" aria-label="Resumen">
-        <Stat icon={<Ticket />} label="Reportes totales" value={reports.length} tone="blue" />
+        <Stat icon={<Ticket />} label="Solicitudes totales" value={reports.length} tone="blue" />
         <Stat icon={<Clock3 />} label="En atención" value={reports.filter((r) => ['Asignado', 'En atención', 'En revisión'].includes(r.status)).length} tone="orange" />
         <Stat icon={<CheckCircle2 />} label="Cerrados" value={reports.filter((r) => r.status === 'Cerrado').length} tone="green" />
         <Stat icon={<AlertCircle />} label="Prioridad alta" value={reports.filter(urgent).length} tone="red" />
@@ -149,10 +149,10 @@ export default function ReportsView({ profile, reports, staff, active, setActive
 
       <section className="content-card" aria-labelledby="seg-title">
         <div className="section-head">
-          <div><h2 id="seg-title">Seguimiento de novedades</h2><p className="muted">Consulta el estado y las evidencias de cada solicitud. Se actualiza en tiempo real.</p></div>
+          <div><h2 id="seg-title">Solicitudes y seguimiento</h2><p className="muted">Gestiona solicitudes, responsables, avances y evidencias. Actualización en tiempo real.</p></div>
           <div className="search-wrap">
             <Search size={17} aria-hidden="true" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar reporte…" aria-label="Buscar reporte" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar solicitud…" aria-label="Buscar solicitud" />
           </div>
         </div>
         <div className="filter-row" role="group" aria-label="Filtrar reportes">
@@ -166,9 +166,9 @@ export default function ReportsView({ profile, reports, staff, active, setActive
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon" aria-hidden="true"><ClipboardList /></div>
-            <h3>{reports.length ? 'No encontramos resultados' : 'Todavía no hay reportes'}</h3>
-            <p>{reports.length ? 'Prueba con otro filtro o término de búsqueda.' : 'Crea un reporte para iniciar el seguimiento de una novedad.'}</p>
-            {!isStaff && !reports.length && <button type="button" className="primary-btn" onClick={onNew}><Plus size={18} aria-hidden="true" /> Crear primer reporte</button>}
+            <h3>{reports.length ? 'No encontramos resultados' : 'Todavía no hay solicitudes'}</h3>
+            <p>{reports.length ? 'Prueba con otro filtro o término de búsqueda.' : 'Registra una solicitud para iniciar el seguimiento del servicio.'}</p>
+            {!isStaff && !reports.length && <button type="button" className="primary-btn" onClick={onNew}><Plus size={18} aria-hidden="true" /> Crear primera solicitud</button>}
           </div>
         ) : (
           <div className="report-list">
@@ -190,26 +190,26 @@ export default function ReportsView({ profile, reports, staff, active, setActive
       {current && (
         <section className="content-card detail-card" ref={detailRef} aria-labelledby="det-title">
           <div className="section-head">
-            <div><div className="eyebrow">REPORTE #{current.ticket_number}</div><h2 id="det-title">{current.title}</h2><p className="muted">Creado {fmtDate(current.created_at)}</p></div>
+            <div><div className="eyebrow">SOLICITUD #{current.ticket_number}</div><h2 id="det-title">{current.title}</h2><p className="muted">Creado {fmtDate(current.created_at)}</p></div>
             <button type="button" className="icon-btn" onClick={() => setActive(null)} aria-label="Cerrar detalle"><X aria-hidden="true" /></button>
           </div>
          <div className="export-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '18px' }}>
   <button type="button" className="primary-btn" onClick={() => exportReport(current, 'word', profile.company_id)}><FileText size={17} aria-hidden="true" /> Descargar Word</button>
   <button type="button" className="secondary-btn" onClick={() => exportReport(current, 'pdf', profile.company_id)}><FileDown size={17} aria-hidden="true" /> Descargar PDF</button>
-  {profile.role === 'admin' && <button type="button" className="secondary-btn" style={{ borderColor: '#dc2626', color: '#b91c1c' }} onClick={() => onDeleteReport?.(current)}><Trash2 size={17} aria-hidden="true" /> Eliminar reporte</button>}
+  {profile.role === 'admin' && <button type="button" className="secondary-btn" style={{ borderColor: '#dc2626', color: '#b91c1c' }} onClick={() => onDeleteReport?.(current)}><Trash2 size={17} aria-hidden="true" /> Eliminar solicitud</button>}
 </div>
           <div className="detail-grid">
-            <div><span className="detail-label">Tipo de servicio</span><b>{current.category}</b></div>
+            <div><span className="detail-label">Área o tipo de servicio</span><b>{current.category}</b></div>
             <div><span className="detail-label">Ubicación</span><b>{current.location || 'No especificada'}</b></div>
             <div><span className="detail-label">Prioridad</span><b>{current.priority}</b></div>
             <div><span className="detail-label">Estado actual</span><b>{current.status}</b></div>
           </div>
-          <div className="description-box"><span className="detail-label">Descripción de la novedad</span><p>{current.description}</p></div>
+          <div className="description-box"><span className="detail-label">Descripción de la solicitud</span><p>{current.description}</p></div>
           {current.resolution_summary && <div className="description-box"><span className="detail-label">Resumen de solución</span><p>{current.resolution_summary}</p></div>}
           <PhotoGallery photos={current.report_photos || []} />
           <div className="timeline"><h3>Historial de seguimiento</h3>
             {timeline.map((u) => (
-              <div className="timeline-item" key={u.id}><div className="timeline-dot" aria-hidden="true" /><div><b>{u.author_name || 'Equipo DACATECH'}</b><p>{u.message}</p><small>{fmtDate(u.created_at)}</small></div></div>
+              <div className="timeline-item" key={u.id}><div className="timeline-dot" aria-hidden="true" /><div><b>{u.author_name || 'Equipo responsable'}</b><p>{u.message}</p><small>{fmtDate(u.created_at)}</small></div></div>
             ))}
           </div>
 
