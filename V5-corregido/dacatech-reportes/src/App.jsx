@@ -230,7 +230,7 @@ export default function App() {
     if (!supabase || !profile) return;
     let q = supabase.from('reports').select(REPORT_SELECT).order('created_at', { ascending: false });
     if (profile.role === 'customer') q = q.eq('company_id', profile.company_id);
-    else if (profile.role === 'technician') q = q.or(`assigned_to.eq.${profile.id},company_id.eq.${profile.company_id}`);
+    else if (profile.role === 'technician') q = q.or(`assigned_to.eq.${profile.id},created_by.eq.${profile.id}`);
     const { data, error: err } = await q;
     if (err) setError('No se pudieron cargar los reportes: ' + err.message);
     else setReports(data || []);
@@ -384,7 +384,7 @@ export default function App() {
       if (evidence?.length) await uploadPhotos(report.id, evidence, customer ? 'customer' : 'service');
       if (!customer) {
         const patch = { status: newStatus, updated_at: new Date().toISOString() };
-        if (profile.role === 'admin' && (assigned || null) !== (report.assigned_to || null)) patch.assigned_to = assigned || null;
+        if (['admin', 'supervisor'].includes(profile.role) && (assigned || null) !== (report.assigned_to || null)) patch.assigned_to = assigned || null;
         if (['Solucionado', 'Cerrado'].includes(newStatus)) { patch.resolution_summary = resolution; if (newStatus === 'Cerrado') patch.closed_at = new Date().toISOString(); }
         const { error: upErr } = await supabase.from('reports').update(patch).eq('id', report.id);
         if (upErr) throw upErr;
