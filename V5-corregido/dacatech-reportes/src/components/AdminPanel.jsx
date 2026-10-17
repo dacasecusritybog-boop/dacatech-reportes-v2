@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Building2, CheckCircle2, Plus, Save, Users, UserCheck, UserX, UserPlus } from 'lucide-react';
+import { Building2, CheckCircle2, Plus, Save, Users, UserCheck, UserX, UserPlus, PauseCircle, PlayCircle, ShieldCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { fmtDate } from '../lib/constants';
 
@@ -71,7 +71,7 @@ export default function AdminPanel({ onMessage }) {
   const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: '', role: 'customer' });
   const [createBusy, setCreateBusy] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);\n  const [companyBusy, setCompanyBusy] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -198,6 +198,30 @@ export default function AdminPanel({ onMessage }) {
     finally { setCreateBusy(false); }
   }
 
+
+  async function toggleCompanyStatus(company) {
+    const nextActive = company.is_active === false;
+    const confirmed = window.confirm(nextActive
+      ? `¿Reactivar la empresa ${company.name}? Revisa también su suscripción en Plataforma.`
+      : `¿Suspender la empresa ${company.name}? Sus reportes, archivos y usuarios se conservarán. No se eliminarán datos.`);
+    if (!confirmed) return;
+    setCompanyBusy(company.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: { action: 'set_company_status', company_id: company.id, is_active: nextActive }
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'Error inesperado.');
+      await load();
+      onMessage('ok', nextActive
+        ? 'Empresa reactivada. Verifica la suscripción antes de restablecer el servicio.'
+        : 'Empresa suspendida; los datos se conservaron.');
+    } catch (error) {
+      onMessage('error', 'No se pudo cambiar el estado de la empresa: ' + (error?.message || 'Error inesperado.'));
+    } finally {
+      setCompanyBusy('');
+    }
+  }
+
   async function addCompany(e) {
     e.preventDefault();
     if (!name.trim()) return;
@@ -247,8 +271,17 @@ export default function AdminPanel({ onMessage }) {
             <button className="primary-btn compact" disabled={busy}><Plus size={16} aria-hidden="true" /> Agregar</button>
           </form>
           <ul className="company-list">
-            {companies.map(c => <li key={c.id}><Building2 size={17} aria-hidden="true" /> <b>{c.name}</b> <small>{users.filter(u => String(u.company_id) === String(c.id)).length} usuario(s)</small></li>)}
+            {companies.map(c => <li key={c.id} style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+              <Building2 size={17} aria-hidden="true" />
+              <b>{c.name}</b>
+              <small>{users.filter(u => String(u.company_id) === String(c.id)).length} usuario(s)</small>
+              <small className={c.is_active === false ? 'status-badge en-revisión' : 'status-badge'}>{c.is_active === false ? 'Suspendida' : 'Activa'}</small>
+              <button type="button" className="secondary-btn compact" disabled={companyBusy===c.id} onClick={()=>toggleCompanyStatus(c)}>
+                {c.is_active === false ? <><PlayCircle size={15}/> Reactivar</> : <><PauseCircle size={15}/> Suspender</>}
+              </button>
+            </li>)}
           </ul>
+          <p className="muted"><ShieldCheck size={14} style={{verticalAlign:'middle'}}/> Solo el operador maestro puede usar estas acciones. Suspender no elimina reportes ni usuarios.</p>
         </div>
       )}
     </section>
