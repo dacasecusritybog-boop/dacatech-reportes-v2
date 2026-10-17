@@ -467,12 +467,20 @@ export default function App() {
   }
 
   if (!profile || !profile.is_active) {
+    const subscriptionSuspended = error.startsWith('La suscripción de esta empresa está suspendida');
+    const subscriptionPending = error.startsWith('La suscripción de esta empresa está pendiente de pago');
+    const subscriptionExpired = error.startsWith('La suscripción de esta empresa está vencida') || error.startsWith('La suscripción de esta empresa está vencida por falta de pago');
+    const subscriptionBlocked = subscriptionSuspended || subscriptionPending || subscriptionExpired;
+    const accessTitle = subscriptionSuspended ? 'Suscripción suspendida' : subscriptionPending ? 'Pago pendiente' : subscriptionExpired ? 'Suscripción vencida' : 'Tu acceso está pendiente';
+    const accessMessage = subscriptionBlocked
+      ? error
+      : 'Tu usuario necesita un perfil activo y una empresa asignada por DACATECH. Te avisaremos cuando esté listo; puedes volver a entrar más tarde.';
     return shell(
       <main id="contenido" className="center-screen">
         <div className="empty-icon" aria-hidden="true"><Users /></div>
-        <h1 className="h2">Tu acceso está pendiente</h1>
-        <p>Tu usuario necesita un perfil activo y una empresa asignada por DACATECH. Te avisaremos cuando esté listo; puedes volver a entrar más tarde.</p>
-        {error && <div className="error-msg" role="alert">{error}</div>}
+        <h1 className="h2">{accessTitle}</h1>
+        <p>{accessMessage}</p>
+        {error && !subscriptionBlocked && <div className="error-msg" role="alert">{error}</div>}
         <button type="button" className="primary-btn" onClick={signOut}>Cerrar sesión <LogOut size={17} aria-hidden="true" /></button>
         <LegalLinks onOpen={setLegal} className="center" />
       </main>
