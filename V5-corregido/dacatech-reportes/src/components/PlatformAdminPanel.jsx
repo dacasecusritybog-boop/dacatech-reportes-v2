@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Building2, CheckCircle2, CreditCard, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Building2, CheckCircle2, CreditCard, RefreshCw, ShieldCheck, PauseCircle, PlayCircle, Archive } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const money = value => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -51,6 +51,21 @@ export default function PlatformAdminPanel({ onMessage }) {
     else { onMessage('ok', 'Estado actualizado.'); await load(); }
   }
 
+
+  async function setCompanyStatus(company, active) {
+    const prompt = active
+      ? `¿Reactivar la empresa ${company.name}? Si su suscripción está suspendida, tendrás que reactivarla por separado.`
+      : `¿Suspender la empresa ${company.name}? Sus reportes y datos se conservarán; no se eliminará información.`;
+    if (!window.confirm(prompt)) return;
+    setBusy(company.id);
+    const { data: result, error } = await supabase.functions.invoke('platform-admin', {
+      body: { action: 'set_company_status', company_id: company.id, is_active: active }
+    });
+    setBusy('');
+    if (error || result?.error) onMessage('error', 'No se pudo cambiar el estado de la empresa: ' + (result?.error || error?.message));
+    else { onMessage('ok', active ? 'Empresa reactivada. Revisa también el estado de su suscripción.' : 'Empresa suspendida; sus datos se conservaron.'); await load(); }
+  }
+
   async function createPayment(companyId) {
     const selected = selection[companyId] || {};
     setBusy(companyId);
@@ -97,13 +112,13 @@ export default function PlatformAdminPanel({ onMessage }) {
         const selected = selection[company.id] || {};
         const currentPlan = sub?.plans;
         return <article className="user-row" key={company.id}>
-          <div className="user-id"><div className="avatar"><Building2 size={18}/></div><div><b>{company.name}</b><small>Creada {date(company.created_at)}</small><small>{sub ? (statusLabels[sub.status] || sub.status) + ' · ' + (currentPlan?.name || 'Sin plan') : 'Sin suscripción comercial registrada'}</small><small>Vence / revisión: {date(sub?.current_period_end || sub?.trial_ends_at)}</small></div></div>
+          <div className="user-id"><div className="avatar"><Building2 size={18}/></div><div><b>{company.name}</b><small>Creada {date(company.created_at)}</small><small>{sub ? (statusLabels[sub.status] || sub.status) + ' · ' + (currentPlan?.name || 'Sin plan') : 'Sin suscripción comercial registrada'}</small><small>Vence / revisión: {date(sub?.current_period_end || sub?.trial_ends_at)}</small><small>Estado empresa: {company.is_active ? 'Activa' : 'Suspendida'}</small></div></div>
           <label>Plan<select value={selected.plan_id || sub?.plan_id || data.plans.find(p=>p.code==='profesional')?.id || ''} onChange={e=>updateSelection(company.id,{plan_id:e.target.value})}>{data.plans.map(p=><option key={p.id} value={p.id}>{p.name} — {money(p.monthly_price_cop)}/mes</option>)}</select></label>
           <label>Periodicidad<select value={selected.billing_period || sub?.billing_period || 'monthly'} onChange={e=>updateSelection(company.id,{billing_period:e.target.value})}><option value="monthly">Mensual</option><option value="annual">Anual</option></select></label>
           <label className="check-row"><input type="checkbox" checked={Boolean(selected.white_label_enabled ?? sub?.white_label_enabled)} onChange={e=>updateSelection(company.id,{white_label_enabled:e.target.checked})}/><span>Marca personalizada (adicional)</span></label>
           <label>Notas administrativas<input maxLength={1000} value={selected.admin_notes || ''} onChange={e=>updateSelection(company.id,{admin_notes:e.target.value})} placeholder="Opcional"/></label>
           <div className="user-actions">
-            <button type="button" className="primary-btn compact" disabled={busy===company.id} onClick={()=>configure(company)}>{busy===company.id?'Guardando…':'Guardar plan / solicitar pago'}</button>
+            <button type="button" className="primary-btn compact" disabled={busy===company.id} onClick={()=>configure(company)}>{busy===company.id?'Guardando…':'Guardar plan / solicitar pago'}</button><button type="button" className="secondary-btn compact" disabled={busy===company.id} onClick={()=>setCompanyStatus(company, !company.is_active)}>{company.is_active ? <><PauseCircle size={16}/> Suspender empresa</> : <><PlayCircle size={16}/> Reactivar empresa</>}</button>
             {sub && <label>Estado<select value={sub.status} disabled={busy===company.id} onChange={e=>changeStatus(company.id,e.target.value)}>{Object.entries(statusLabels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>}
           </div>
           {sub && <div className="company-panel">
@@ -124,6 +139,6 @@ export default function PlatformAdminPanel({ onMessage }) {
         {payment.status==='pending' && <button type="button" className="primary-btn compact" disabled={busy===payment.id} onClick={()=>confirmPayment(payment)}><CheckCircle2 size={16}/>{busy===payment.id?'Confirmando…':'Confirmar transferencia verificada'}</button>}
       </article>)}
     </div>}
-    <p className="muted" style={{marginTop:16}}>La activación es manual. Verifica el abono en la cuenta bancaria antes de confirmar. Este panel no consulta automáticamente bancos ni procesa transferencias.</p>
+    <p className="muted" style={{marginTop:16}}><Archive size={15} style={{verticalAlign:'middle'}}/> Suspender conserva los datos; la eliminación definitiva no está disponible desde este panel. La activación es manual. Verifica el abono en la cuenta bancaria antes de confirmar. Este panel no consulta automáticamente bancos ni procesa transferencias.</p>
   </section>;
 }
