@@ -9,7 +9,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || '',
-      icon: '/icons/icon-192.png',
+      icon: '/icons/dacatech-reportes.svg',
       badge: '/icons/badge-96.png',
       tag: data.tag || 'dacatech',
       renotify: true,
