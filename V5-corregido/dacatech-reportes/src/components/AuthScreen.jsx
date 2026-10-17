@@ -52,7 +52,7 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
 
   return (
     <div className="auth-layout">
-      <div className="auth-glow" aria-hidden="true" />
+      <div className="auth-glow" aria-hidden="true" /><div className="auth-tech-backdrop" aria-hidden="true"><div className="auth-camera camera-one" /><div className="auth-camera camera-two" /><div className="auth-brand-title"><strong>DACA<span>TECH</span></strong><small>SOLUCIONES EN SEGURIDAD<br />Y TECNOLOGÍA</small></div></div>
       <section className="brand-panel">
         <div className="brand-mark" aria-hidden="true">D<span>+</span></div>
         <div className="eyebrow">PORTAL DE SERVICIO</div>
