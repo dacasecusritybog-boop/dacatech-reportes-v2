@@ -56,7 +56,7 @@ export default function App() {
         if (alive) setIsPlatformOperator(!operatorError && Boolean(data));
       });
     return () => { alive = false; };
-  }, [session?.user?.id, profile?.is_active]);
+  }, [session?.user?.id, profile?.is_active, profile?.company_id]);
 
   const isStaff = profile && profile.role !== 'customer';
 
@@ -71,7 +71,7 @@ export default function App() {
       setError('');
       const { data, error: err } = await supabase
         .from('profiles')
-        .select('id,company_id,full_name,role,is_active,companies(name)')
+        .select('id,company_id,full_name,role,is_active,companies(name,is_active)')
         .eq('id', id)
         .maybeSingle();
       if (err) {
@@ -81,6 +81,13 @@ export default function App() {
       } else if (!data) {
         setError('Tu usuario inició sesión, pero no tiene un perfil creado en la tabla profiles. Pide al administrador que cree o vincule tu perfil.');
         setProfile(null);
+      } else if (data.is_active !== true || (data.companies && data.companies.is_active === false)) {
+        await supabase.auth.signOut();
+        setSession(null);
+        setProfile(null);
+        setError(data.companies?.is_active === false
+          ? 'El acceso de esta empresa está suspendido. Contacta a DACATECH para revisar tu servicio.'
+          : 'Tu acceso a DACATECH Reportes fue desactivado por el administrador.');
       } else {
         setProfile(data);
       }
@@ -123,17 +130,17 @@ export default function App() {
       try {
         const { data, error: profileError } = await supabase
           .from('profiles')
-          .select('is_active')
+           .select('is_active,company_id,companies(is_active)')
           .eq('id', session.user.id)
           .maybeSingle();
-        if (!profileError && (!data || data.is_active !== true)) {
+        if (!profileError && (!data || data.is_active !== true || (data.companies && data.companies.is_active === false))) {
           await supabase.auth.signOut();
           setSession(null);
           setProfile(null);
           setReports([]);
           setActive(null);
           setView('reports');
-          setError('Tu acceso a DACATECH Reportes fue desactivado por el administrador.');
+          setError(data?.companies?.is_active === false ? 'El acceso de esta empresa está suspendido. Contacta a DACATECH.' : 'Tu acceso a DACATECH Reportes fue desactivado por el administrador.');
         }
       } finally {
         checking = false;
@@ -147,6 +154,16 @@ export default function App() {
         if (payload.new?.is_active !== true) void enforceActiveStatus();
       })
       .subscribe();
+    const companyChannel = profile?.company_id
+      ? supabase.channel('dt-company-status-' + profile.company_id)
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'companies',
+          filter: 'id=eq.' + profile.company_id
+        }, (payload) => {
+          if (payload.new?.is_active !== true) void enforceActiveStatus();
+        })
+        .subscribe()
+      : null;
     const onVisibility = () => {
       if (document.visibilityState === 'visible') void enforceActiveStatus();
     };
