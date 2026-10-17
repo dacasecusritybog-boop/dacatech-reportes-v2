@@ -4,3 +4,6 @@
 
 /* Ajuste móvil: el centro de notificaciones debe permanecer dentro de la pantalla. */
 @media(max-width:700px){.app-notification-panel{position:fixed!important;left:12px!important;right:12px!important;top:calc(env(safe-area-inset-top, 0px) + 145px)!important;width:auto!important;max-width:none!important;max-height:calc(100dvh - env(safe-area-inset-top, 0px) - 175px)!important;overflow-y:auto!important;z-index:1000!important;border-radius:16px!important;box-shadow:0 18px 48px rgba(0,0,0,.45)!important}.app-notification-wrap{position:static!important}.app-notification-panel button{overflow-wrap:anywhere;white-space:normal}.app-notification-panel>div:first-child{position:sticky;top:-12px;z-index:1;background:var(--card,#fff);padding-top:4px}}
+
+.dacatech-logo{display:block;width:46px;height:46px;object-fit:contain;flex:0 0 46px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px #1e3048}
+@media(max-width:700px){.dacatech-logo{width:42px;height:42px;flex-basis:42px}.logo-row{align-items:center;gap:10px}.logo-row b{font-size:14px}.logo-row small{font-size:9px}}
