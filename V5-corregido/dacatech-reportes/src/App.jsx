@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, Bell, ClipboardList, LogOut, Plus, UserCircle, Users, X, CheckCheck } from 'lucide-react';
+import { AlertCircle, Bell, ClipboardList, LogOut, Plus, UserCircle, Users, X, CheckCheck, ShieldCheck } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { detachDevice, usePush } from './lib/push';
 import { roleLabel } from './lib/constants';
@@ -10,6 +10,7 @@ import AdminPanel from './components/AdminPanel';
 import AccountView from './components/AccountView';
 import ReportFormatSettings from './components/ReportFormatSettings';
 import SubscriptionPanel from './components/SubscriptionPanel';
+import PlatformAdminPanel from './components/PlatformAdminPanel';
 import NotificationCard from './components/NotificationCard';
 import Toasts from './components/Toasts';
 import CookieNotice from './components/CookieNotice';
@@ -22,6 +23,7 @@ const readFlag = (k) => { try { return sessionStorage.getItem(k) === '1'; } catc
 export default function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [isPlatformOperator, setIsPlatformOperator] = useState(false);
   const [loading, setLoading] = useState(true);
   const [recovery, setRecovery] = useState(false);
   const [legal, setLegal] = useState(null);
@@ -44,6 +46,17 @@ export default function App() {
   const lastLocalWrite = useRef(0);
   const pendingOpen = useRef(new URLSearchParams(window.location.search).get('report'));
   const push = usePush(session?.user?.id);
+
+  useEffect(() => {
+    let alive = true;
+    setIsPlatformOperator(false);
+    if (!session?.user?.id || !profile?.is_active) return () => { alive = false; };
+    supabase.from('platform_operators').select('user_id').eq('user_id', session.user.id).maybeSingle()
+      .then(({ data, error: operatorError }) => {
+        if (alive) setIsPlatformOperator(!operatorError && Boolean(data));
+      });
+    return () => { alive = false; };
+  }, [session?.user?.id, profile?.is_active]);
 
   const isStaff = profile && profile.role !== 'customer';
 
@@ -403,11 +416,12 @@ export default function App() {
   const navItems = [
     { id: 'reports', label: 'Reportes', icon: <ClipboardList size={18} aria-hidden="true" />, count: reports.length },
     ...(profile.role === 'admin' ? [{ id: 'admin', label: 'Empresas y usuarios', short: 'Admin', icon: <Users size={18} aria-hidden="true" /> }, { id: 'subscription', label: 'Suscripción', short: 'Plan', icon: <ClipboardList size={18} aria-hidden="true" /> }, { id: 'report-format', label: 'Formato de informes', short: 'Formato', icon: <ClipboardList size={18} aria-hidden="true" /> }] : []),
+    ...(isPlatformOperator ? [{ id: 'platform-admin', label: 'Panel maestro', short: 'Plataforma', icon: <ShieldCheck size={18} aria-hidden="true" /> }] : []),
     { id: 'account', label: 'Mi cuenta', short: 'Cuenta', icon: <UserCircle size={18} aria-hidden="true" /> },
   ];
 
   const showPushBanner = view === 'reports' && !bannerHidden && push.configured && (push.needsIOSInstall || (push.supported && push.permission === 'default' && !push.subscribed));
-  const titles = { reports: profile.role === 'customer' ? 'Mis reportes' : 'Panel de reportes', admin: 'Administración', subscription: 'Plan y suscripción', 'report-format': 'Formato de informes', account: 'Mi cuenta' };
+  const titles = { reports: profile.role === 'customer' ? 'Mis reportes' : 'Panel de reportes', admin: 'Administración', subscription: 'Plan y suscripción', 'platform-admin': 'Panel maestro DACATECH', 'report-format': 'Formato de informes', account: 'Mi cuenta' };
 
   return shell(
     <div className="app-shell">
@@ -460,6 +474,7 @@ export default function App() {
         )}
         {view === 'admin' && profile.role === 'admin' && <AdminPanel onMessage={adminMessage} />}
         {view === 'subscription' && profile.role === 'admin' && <SubscriptionPanel profile={profile} onMessage={adminMessage} />}
+        {view === 'platform-admin' && isPlatformOperator && <PlatformAdminPanel onMessage={adminMessage} />}
         {view === 'report-format' && profile.role === 'admin' && <ReportFormatSettings profile={profile} onMessage={adminMessage} />}
         {view === 'account' && <AccountView profile={profile} session={session} push={push} onSignOut={signOut} onOpenLegal={setLegal} />}
       </main>
