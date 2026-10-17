@@ -467,7 +467,7 @@ export default function App() {
   }
 
   if (!profile || !profile.is_active) {
-    const subscriptionSuspended = error.startsWith('La suscripción de esta empresa está suspendida');
+    const subscriptionSuspended = error.startsWith('La suscripción de esta empresa está suspendida') || error.toLowerCase().includes('suscripción') && error.toLowerCase().includes('suspendida');
     const subscriptionPending = error.startsWith('La suscripción de esta empresa está pendiente de pago');
     const subscriptionExpired = error.startsWith('La suscripción de esta empresa está vencida') || error.startsWith('La suscripción de esta empresa está vencida por falta de pago');
     const subscriptionBlocked = subscriptionSuspended || subscriptionPending || subscriptionExpired;
