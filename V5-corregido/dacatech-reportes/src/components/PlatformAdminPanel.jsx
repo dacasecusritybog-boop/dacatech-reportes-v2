@@ -119,7 +119,7 @@ export default function PlatformAdminPanel({ onMessage }) {
           <label>Notas administrativas<input maxLength={1000} value={selected.admin_notes || ''} onChange={e=>updateSelection(company.id,{admin_notes:e.target.value})} placeholder="Opcional"/></label>
           <div className="user-actions">
             <button type="button" className="primary-btn compact" disabled={busy===company.id} onClick={()=>configure(company)}>{busy===company.id?'Guardando…':'Guardar plan / solicitar pago'}</button><button type="button" className="secondary-btn compact" disabled={busy===company.id} onClick={()=>setCompanyStatus(company, !company.is_active)}>{company.is_active ? <><PauseCircle size={16}/> Suspender empresa</> : <><PlayCircle size={16}/> Reactivar empresa</>}</button>
-            {sub && <label>Estado<select value={sub.status} disabled={busy===company.id} onChange={e=>changeStatus(company.id,e.target.value)}>{Object.entries(statusLabels).filter(([key])=>key!=='active' || sub.status==='active').map(([key,label])=><option key={key} value={key}>{label}</option>)}</select><small className="muted">Para activar una suscripción nueva o vencida, registra el pago y confirma la transferencia verificada.</small></label>}
+            {sub && <label>Estado<select value={sub.status} disabled={busy===company.id} onChange={e=>changeStatus(company.id,e.target.value)}>{Object.entries(statusLabels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select><small className="muted">Si el cliente ya pagó, registra el cobro y confirma la transferencia verificada para activar el servicio.</small></label>}
           </div>
           {sub && <div className="company-panel">
             <b>Registrar solicitud de cobro</b>
