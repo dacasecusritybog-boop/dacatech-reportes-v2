@@ -14,20 +14,37 @@ export default function SubscriptionPanel({ profile, onMessage }) {
 
   useEffect(() => {
     let alive = true;
-    (async () => {
-      setLoading(true);
+    const loadSubscription = async () => {
       const [subResult, planResult] = await Promise.all([
         supabase.from('subscriptions').select('*, plans(*)').eq('company_id', profile.company_id).maybeSingle(),
         supabase.from('plans').select('*').eq('is_active', true).eq('is_public', true).order('monthly_price_cop')
       ]);
       if (!alive) return;
       if (subResult.error) setLoadError('No se pudo consultar la suscripción: ' + subResult.error.message);
-      else setSubscription(subResult.data || null);
+      else { setSubscription(subResult.data || null); setLoadError(''); }
       if (planResult.error) setLoadError(current => current || ('No se pudieron cargar los planes: ' + planResult.error.message));
       else setPlans(planResult.data || []);
       setLoading(false);
-    })();
-    return () => { alive = false; };
+    };
+    setLoading(true);
+    void loadSubscription();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void loadSubscription();
+    };
+    window.addEventListener('focus', onVisible);
+    document.addEventListener('visibilitychange', onVisible);
+    const channel = supabase.channel('dt-subscription-' + profile.company_id)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'subscriptions',
+        filter: 'company_id=eq.' + profile.company_id
+      }, () => { void loadSubscription(); })
+      .subscribe();
+    return () => {
+      alive = false;
+      window.removeEventListener('focus', onVisible);
+      document.removeEventListener('visibilitychange', onVisible);
+      void supabase.removeChannel(channel);
+    };
   }, [profile.company_id]);
 
   if (loading) return <section className="content-card"><p>Consultando el plan de tu empresa…</p></section>;
