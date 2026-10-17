@@ -71,7 +71,8 @@ export default function AdminPanel({ onMessage }) {
   const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: '', role: 'customer' });
   const [createBusy, setCreateBusy] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);\n  const [companyBusy, setCompanyBusy] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [companyBusy, setCompanyBusy] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
