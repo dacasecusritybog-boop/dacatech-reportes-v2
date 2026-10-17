@@ -40,7 +40,7 @@ export default function PlatformAdminPanel({ onMessage }) {
     }});
     setBusy('');
     if (error || result?.error) onMessage('error', 'No se pudo configurar la suscripción: ' + (result?.error || error?.message));
-    else { onMessage('ok', 'Plan guardado. El estado queda pendiente de pago; aún no se activó el servicio.'); await load(); }
+    else { onMessage('ok', 'Plan guardado. Se conservó el estado y el periodo actuales; para activar, confirma un pago verificado.'); await load(); }
   }
 
   async function changeStatus(companyId, status) {
@@ -119,7 +119,7 @@ export default function PlatformAdminPanel({ onMessage }) {
           <label>Notas administrativas<input maxLength={1000} value={selected.admin_notes || ''} onChange={e=>updateSelection(company.id,{admin_notes:e.target.value})} placeholder="Opcional"/></label>
           <div className="user-actions">
             <button type="button" className="primary-btn compact" disabled={busy===company.id} onClick={()=>configure(company)}>{busy===company.id?'Guardando…':'Guardar plan / solicitar pago'}</button><button type="button" className="secondary-btn compact" disabled={busy===company.id} onClick={()=>setCompanyStatus(company, !company.is_active)}>{company.is_active ? <><PauseCircle size={16}/> Suspender empresa</> : <><PlayCircle size={16}/> Reactivar empresa</>}</button>
-            {sub && <label>Estado<select value={sub.status} disabled={busy===company.id} onChange={e=>changeStatus(company.id,e.target.value)}>{Object.entries(statusLabels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>}
+            {sub && <label>Estado<select value={sub.status} disabled={busy===company.id} onChange={e=>changeStatus(company.id,e.target.value)}>{Object.entries(statusLabels).filter(([key])=>key!=='active' || sub.status==='active').map(([key,label])=><option key={key} value={key}>{label}</option>)}</select><small className="muted">Para activar una suscripción nueva o vencida, registra el pago y confirma la transferencia verificada.</small></label>}
           </div>
           {sub && <div className="company-panel">
             <b>Registrar solicitud de cobro</b>
