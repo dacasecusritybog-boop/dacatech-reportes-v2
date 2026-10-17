@@ -195,7 +195,13 @@ export default function AdminPanel({ onMessage }) {
       setNewUser({ full_name: '', email: '', password: '', company_id: '', role: 'customer' });
       await load();
       onMessage('ok', 'Cuenta creada, vinculada a su empresa y configurada con el rol seleccionado.');
-    } catch (error) { onMessage('error', 'No se pudo crear la cuenta: ' + (error?.message || 'Error inesperado.')); }
+    } catch (error) {
+      const detail = error?.message || 'Error inesperado.';
+      const duplicateEmail = /already been registered|already registered|user already exists|email.*already/i.test(detail);
+      onMessage('error', duplicateEmail
+        ? 'Ese correo ya tiene una cuenta en DACATECH. No crees otra: ve a Usuarios, busca el correo y asígnale la empresa y el rol correctos. Si no aparece en la lista, revisa la cuenta existente antes de volver a intentarlo.'
+        : 'No se pudo crear la cuenta: ' + detail);
+    }
     finally { setCreateBusy(false); }
   }
 
