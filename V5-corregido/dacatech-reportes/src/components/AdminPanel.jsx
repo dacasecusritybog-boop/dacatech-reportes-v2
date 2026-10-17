@@ -8,15 +8,16 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
   const [company, setCompany] = useState(u.company_id ?? '');
   const [active, setActive] = useState(u.profile_exists ? Boolean(u.is_active) : true);
   const [fullName, setFullName] = useState(u.full_name || '');
+  const [jobTitle, setJobTitle] = useState(u.job_title || '');
   const [busy, setBusy] = useState(false);
   const pending = Boolean(u.is_active) && (!u.profile_exists || !u.company_id);
   const dirty = role !== (u.role || 'customer') || String(company) !== String(u.company_id ?? '') ||
-    active !== Boolean(u.is_active) || fullName !== (u.full_name || '');
+    active !== Boolean(u.is_active) || fullName !== (u.full_name || '') || jobTitle !== (u.job_title || '');
 
   async function submit() {
     setBusy(true);
     try {
-      await onSave(u.id, { role, company_id: company || null, is_active: active, full_name: fullName });
+      await onSave(u.id, { role, company_id: company || null, is_active: active, full_name: fullName, job_title: jobTitle });
     } finally { setBusy(false); }
   }
 
@@ -26,6 +27,7 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
         <div className="avatar" aria-hidden="true">{(fullName || u.email || 'D').slice(0, 1).toUpperCase()}</div>
         <div>
           <b>{fullName || 'Sin nombre'}</b>
+          {jobTitle && <small>Cargo: {jobTitle}</small>}
           <small>{u.email}</small>
           <small>Registrado {fmtDate(u.created_at)}</small>
           {u.email_confirmed_at && <small>Correo confirmado</small>}
@@ -33,7 +35,8 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
         </div>
       </div>
       <label>Nombre<input value={fullName} onChange={e => setFullName(e.target.value)} maxLength={120} placeholder="Nombre del usuario" /></label>
-      <label>Rol
+      <label>Cargo / área de trabajo<input value={jobTitle} onChange={e => setJobTitle(e.target.value)} maxLength={120} placeholder="Ej. Servicio administrativo, eventos, soldadura, sonido…" /></label>
+      <label>Rol de acceso
         <select value={role} onChange={e => setRole(e.target.value)}>
           <option value="customer">Cliente</option><option value="technician">Técnico</option>
           <option value="admin">Administrador</option>
@@ -112,14 +115,15 @@ export default function AdminPanel({ onMessage }) {
         p_company_id: patch.company_id,
         p_role: patch.role,
         p_is_active: patch.is_active,
-        p_full_name: patch.full_name || null
+        p_full_name: patch.full_name || null,
+        p_job_title: patch.job_title || ''
       });
 
       if (result.error) throw result.error;
 
       const saved = result.data;
       if (!saved || saved.id !== id || saved.is_active !== Boolean(patch.is_active) ||
-          saved.company_id !== patch.company_id || saved.role !== patch.role) {
+          saved.company_id !== patch.company_id || saved.role !== patch.role || (saved.job_title || '') !== (patch.job_title || '')) {
         throw new Error('Supabase no confirmó todos los cambios. Recarga la lista y verifica el usuario.');
       }
 
@@ -146,7 +150,8 @@ export default function AdminPanel({ onMessage }) {
         p_company_id: user.company_id,
         p_role: user.role || 'customer',
         p_is_active: nextActive,
-        p_full_name: user.full_name || null
+        p_full_name: user.full_name || null,
+        p_job_title: user.job_title || ''
       });
       if (result.error) throw result.error;
       if (!result.data || result.data.id !== user.id || result.data.is_active !== nextActive) {
