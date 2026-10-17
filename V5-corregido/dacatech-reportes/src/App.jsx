@@ -411,7 +411,7 @@ export default function App() {
   return shell(
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="logo-row"><div className="small-mark" aria-hidden="true">D<span>+</span></div><div><b>DACATECH</b><small>REPORTES</small></div></div>
+        <div className="logo-row"><img className="dacatech-logo" src="/dacatech-logo.svg" alt="DACATECH" /><div><b>DACATECH</b><small>REPORTES</small></div></div>
         <div className="workspace-label">ESPACIO DE TRABAJO</div>
         <div className="company-pill"><span className="online-dot" aria-hidden="true" />{profile.companies?.name || 'Empresa'}</div>
         <nav aria-label="Principal">
