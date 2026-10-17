@@ -218,7 +218,7 @@ export default function ReportsView({ profile, reports, staff, active, setActive
               <h3><Activity size={18} aria-hidden="true" /> Actualizar atención</h3>
               <div className="two-col">
                 <label>Estado<select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>{statuses.map((s) => <option key={s}>{s}</option>)}</select></label>
-                {profile.role === 'admin' && (
+                {['admin', 'supervisor'].includes(profile.role) && (
                   <label>Asignado a
                     <select value={assigned} onChange={(e) => setAssigned(e.target.value)}>
                       <option value="">Sin asignar</option>
