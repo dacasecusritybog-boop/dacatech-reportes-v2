@@ -35,7 +35,7 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
         </div>
       </div>
       <label>Nombre<input value={fullName} onChange={e => setFullName(e.target.value)} maxLength={120} placeholder="Nombre del usuario" /></label>
-      <label>Cargo / área de trabajo<input value={jobTitle} onChange={e => setJobTitle(e.target.value)} maxLength={120} placeholder="Ej. Servicio administrativo, eventos, soldadura, sonido…" /></label>
+      <label>Cargo / área de trabajo<input value={jobTitle} onChange={e => setJobTitle(e.target.value)} maxLength={120} list="job-title-suggestions" placeholder="Escribe o selecciona un cargo…" /></label>
       <label>Rol de acceso
         <select value={role} onChange={e => setRole(e.target.value)}>
           <option value="customer">Usuario de empresa</option><option value="technician">Responsable operativo</option>
@@ -252,6 +252,7 @@ export default function AdminPanel({ onMessage }) {
 
   return (
     <section className="content-card" aria-labelledby="adm-title">
+<datalist id="job-title-suggestions"><option value="Administrador de empresa" /><option value="Gerente" /><option value="Director" /><option value="Coordinador" /><option value="Supervisor" /><option value="Jefe de área" /><option value="Asistente administrativo" /><option value="Auxiliar administrativo" /><option value="Recepcionista" /><option value="Recursos humanos" /><option value="Contabilidad" /><option value="Finanzas" /><option value="Compras" /><option value="Atención al cliente" /><option value="Comercial / ventas" /><option value="Marketing y comunicaciones" /><option value="Organizador de eventos" /><option value="Coordinador de eventos" /><option value="Logística" /><option value="Almacén e inventario" /><option value="Mensajería" /><option value="Conductor" /><option value="Aseo y limpieza" /><option value="Servicios generales" /><option value="Mantenimiento" /><option value="Electricista" /><option value="Soldador" /><option value="Plomero" /><option value="Obras civiles" /><option value="Pintor" /><option value="Carpintero" /><option value="Técnico de redes" /><option value="Soporte técnico" /><option value="Sistemas / TI" /><option value="CCTV y cámaras" /><option value="Control de acceso" /><option value="Detección de incendios" /><option value="Técnico de alarmas" /><option value="Sonido" /><option value="Sonido e iluminación" /><option value="Operador audiovisual" /><option value="Operario" /><option value="Auxiliar operativo" /><option value="Calidad" /><option value="Seguridad y salud en el trabajo" /><option value="Vigilancia" /><option value="Gestión documental" /><option value="Docente / instructor" /><option value="Profesional de salud" /><option value="Enfermería" /><option value="Cocina" /><option value="Servicios de alimentación" /><option value="Otro cargo" /></datalist>
       <div className="section-head">
         <div><h2 id="adm-title">Empresas y usuarios</h2><p className="muted">Gestiona los usuarios de tu empresa, asigna sus cargos libremente y define sus permisos. El administrador maestro DACATECH conserva el control global de la plataforma.</p></div>
       </div>
