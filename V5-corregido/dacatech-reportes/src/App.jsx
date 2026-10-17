@@ -20,6 +20,24 @@ const REPORT_SELECT = '*, companies(name), report_photos(id,storage_path,photo_t
 const BANNER_KEY = 'dt_banner_push_oculto';
 const readFlag = (k) => { try { return sessionStorage.getItem(k) === '1'; } catch { return false; } };
 
+const BLOCKED_SUBSCRIPTION_STATUSES = new Set(['pending_payment', 'suspended', 'past_due', 'expired']);
+
+async function getSubscriptionBlockReason(companyId, userId) {
+  if (!companyId || !userId) return '';
+  const { data: operator, error: operatorError } = await supabase
+    .from('platform_operators').select('user_id').eq('user_id', userId).maybeSingle();
+  if (operatorError) throw operatorError;
+  if (operator) return '';
+  const { data: subscription, error: subscriptionError } = await supabase
+    .from('subscriptions').select('status').eq('company_id', companyId).maybeSingle();
+  if (subscriptionError) throw subscriptionError;
+  // Las empresas heredadas sin suscripción conservan su acceso hasta asignarles un plan.
+  if (!subscription) return '';
+  return BLOCKED_SUBSCRIPTION_STATUSES.has(subscription.status)
+    ? 'La suscripción de esta empresa está ' + ({ pending_payment: 'pendiente de pago', suspended: 'suspendida', past_due: 'vencida por falta de pago', expired: 'vencida' }[subscription.status] || 'inactiva') + '. Contacta a DACATECH para restablecer el acceso.'
+    : '';
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -81,15 +99,26 @@ export default function App() {
       } else if (!data) {
         setError('Tu usuario inició sesión, pero no tiene un perfil creado en la tabla profiles. Pide al administrador que cree o vincule tu perfil.');
         setProfile(null);
-      } else if (data.is_active !== true || (data.companies && data.companies.is_active === false)) {
-        await supabase.auth.signOut();
-        setSession(null);
-        setProfile(null);
-        setError(data.companies?.is_active === false
-          ? 'El acceso de esta empresa está suspendido. Contacta a DACATECH para revisar tu servicio.'
-          : 'Tu acceso a DACATECH Reportes fue desactivado por el administrador.');
       } else {
-        setProfile(data);
+        let subscriptionBlock = '';
+        try {
+          subscriptionBlock = await getSubscriptionBlockReason(data.company_id, id);
+        } catch (subscriptionError) {
+          console.error('No se pudo verificar el estado de suscripción:', subscriptionError);
+          setError('No se pudo verificar el estado de la suscripción. Intenta nuevamente o contacta a DACATECH.');
+          setProfile(null);
+          return;
+        }
+        if (data.is_active !== true || (data.companies && data.companies.is_active === false) || subscriptionBlock) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setProfile(null);
+          setError(data.companies?.is_active === false
+            ? 'El acceso de esta empresa está suspendido. Contacta a DACATECH para revisar tu servicio.'
+            : subscriptionBlock || 'Tu acceso a DACATECH Reportes fue desactivado por el administrador.');
+        } else {
+          setProfile(data);
+        }
       }
     } catch (err) {
       console.error('Error inesperado cargando perfil:', err);
@@ -133,7 +162,8 @@ export default function App() {
            .select('is_active,company_id,companies(is_active)')
           .eq('id', session.user.id)
           .maybeSingle();
-        if (!profileError && (!data || data.is_active !== true || (data.companies && data.companies.is_active === false))) {
+        if (profileError) return;
+        if (!data || data.is_active !== true || (data.companies && data.companies.is_active === false)) {
           await supabase.auth.signOut();
           setSession(null);
           setProfile(null);
@@ -141,6 +171,24 @@ export default function App() {
           setActive(null);
           setView('reports');
           setError(data?.companies?.is_active === false ? 'El acceso de esta empresa está suspendido. Contacta a DACATECH.' : 'Tu acceso a DACATECH Reportes fue desactivado por el administrador.');
+          return;
+        }
+        let subscriptionBlock = '';
+        try {
+          subscriptionBlock = await getSubscriptionBlockReason(data.company_id, session.user.id);
+        } catch (subscriptionError) {
+          console.error('No se pudo verificar el estado de suscripción:', subscriptionError);
+          setError('No se pudo verificar el estado de la suscripción. Intenta nuevamente.');
+          return;
+        }
+        if (subscriptionBlock) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setProfile(null);
+          setReports([]);
+          setActive(null);
+          setView('reports');
+          setError(subscriptionBlock);
         }
       } finally {
         checking = false;
