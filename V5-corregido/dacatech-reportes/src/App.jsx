@@ -173,8 +173,9 @@ export default function App() {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('focus', enforceActiveStatus);
       void supabase.removeChannel(channel);
+      if (companyChannel) void supabase.removeChannel(companyChannel);
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, profile?.company_id]);
 
   /* ---------- datos ---------- */
   const loadReports = useCallback(async () => {
