@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, AlertCircle, ArrowRight, Camera, ShieldCheck } from 'lucide-react';
+import { Activity, AlertCircle, ArrowRight, Camera, ShieldCheck, Eye, EyeOff, UserRound, LockKeyhole, LogIn } from 'lucide-react';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { EMPRESA } from '../config/empresa';
 import { LegalLinks } from './Legal';
@@ -11,6 +11,8 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const go = (m) => { setMode(m); setError(''); setNotice(''); setPassword(''); };
 
@@ -52,7 +54,7 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
 
   return (
     <div className="auth-layout">
-      <div className="auth-glow" aria-hidden="true" /><div className="auth-tech-backdrop" aria-hidden="true"><div className="auth-camera camera-one" /><div className="auth-camera camera-two" /><div className="auth-brand-title"><strong>DACA<span>TECH</span></strong><small>SOLUCIONES EN SEGURIDAD<br />Y TECNOLOGÍA</small></div></div>
+      <div className="auth-glow" aria-hidden="true" /><div className="auth-tech-backdrop" aria-hidden="true"><div className="auth-camera camera-one" /><div className="auth-camera camera-two" /><div className="auth-brand-title"><strong>DACA<span>TECH</span></strong><i /><small>SOLUCIONES EN SEGURIDAD<br />Y TECNOLOGÍA</small></div></div>
       <section className="brand-panel">
         <div className="brand-mark" aria-hidden="true">D<span>+</span></div>
         <div className="eyebrow">PORTAL DE SERVICIO</div>
@@ -66,30 +68,25 @@ export default function AuthScreen({ recovery, onRecoveryDone, onOpenLegal }) {
       </section>
 
       <section className="auth-card" aria-labelledby="auth-title">
-        <div className="mobile-brand">DACATECH <span>REPORTES</span></div>
-        <div className="eyebrow">{mode === 'reset' ? 'SEGURIDAD DE LA CUENTA' : 'BIENVENIDO'}</div>
-        <h2 id="auth-title">{titles[mode]}</h2>
-        <p className="muted">{subs[mode]}</p>
+        
+        <div className="eyebrow">{mode === 'reset' ? 'SEGURIDAD DE LA CUENTA' : 'CENTRO DE SOPORTE'}</div>
+        <h2 id="auth-title">{mode === 'login' ? 'Iniciar sesión' : titles[mode]}</h2>
+        <p className="muted">{mode === 'login' ? 'Ingresa a tu cuenta para continuar' : subs[mode]}</p>
         {!isSupabaseConfigured && <div className="warning"><AlertCircle size={18} aria-hidden="true" /> Configura primero el archivo <code>.env</code> usando <code>.env.example</code>.</div>}
         {error && <div className="error-msg" role="alert">{error}</div>}
         {notice && <div className="success-msg" role="status">{notice}</div>}
 
         <form onSubmit={submit} className="form-stack">
           {mode !== 'reset' && (
-            <label>Correo electrónico<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="nombre@empresa.com" autoComplete="email" /></label>
+            <label className="auth-field"><span>Correo electrónico</span><span className="auth-field-control"><UserRound size={21} aria-hidden="true" /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Correo electrónico o usuario" autoComplete="email" /></span></label>
           )}
           {mode !== 'forgot' && (
-            <label>{mode === 'reset' ? 'Nueva contraseña' : 'Contraseña'}
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="Mínimo 8 caracteres"
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
-            </label>
+            <label className="auth-field"><span>{mode === 'reset' ? 'Nueva contraseña' : 'Contraseña'}</span><span className="auth-field-control"><LockKeyhole size={21} aria-hidden="true" /><input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder={mode === "login" ? "Contraseña" : "Mínimo 8 caracteres"} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />{mode !== "forgot" && <button type="button" className="auth-eye" aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} onClick={() => setShowPassword(v => !v)}>{showPassword ? <EyeOff size={21} /> : <Eye size={21} />}</button>}</span></label>
           )}
-          <button className="primary-btn" disabled={!isSupabaseConfigured || busy}>
-            {busy ? 'Un momento…' : { login: 'Iniciar sesión', forgot: 'Enviar enlace de recuperación', reset: 'Guardar nueva contraseña' }[mode]} <ArrowRight size={18} aria-hidden="true" />
-          </button>
+          {mode === "login" && <div className="auth-options"><label className="remember-option"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} /><span>Recordarme</span></label><button type="button" className="auth-forgot" onClick={() => go("forgot")}>¿Olvidaste tu contraseña?</button></div>}
+          <button className="primary-btn auth-submit" disabled={!isSupabaseConfigured || busy}><LogIn size={21} aria-hidden="true" /> {busy ? 'Un momento…' : { login: 'Iniciar sesión', forgot: 'Enviar enlace de recuperación', reset: 'Guardar nueva contraseña' }[mode]}</button>
         </form>
 
-        {mode === 'login' && <button type="button" className="text-btn" onClick={() => go('forgot')}>¿Olvidaste tu contraseña?</button>}
         {mode === 'forgot' && <button type="button" className="text-btn" onClick={() => go('login')}>Volver a iniciar sesión</button>}
         {mode === 'reset' && <button type="button" className="text-btn" onClick={() => { window.history.replaceState({}, document.title, window.location.pathname); onRecoveryDone(); }}>Volver a iniciar sesión</button>}
         <div className="auth-footer">Sistema de reportes y soporte técnico <b>DACATECH</b></div>
