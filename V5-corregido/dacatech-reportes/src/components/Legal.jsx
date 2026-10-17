@@ -21,13 +21,13 @@ const SECTIONS = [
         <p>{E.razonSocial}, identificada con NIT {E.nit}, responsable de DACATECH Reportes, adopta esta política conforme a la Ley 1581 de 2012, el Decreto 1074 de 2015 y las normas colombianas aplicables.</p>
         <h4>1. Responsable</h4><Datos />
         <h4>2. Datos tratados</h4>
-        <p>Según el uso de la plataforma, podemos tratar nombres, correos electrónicos, datos de cuenta, empresa y rol asignados, información contenida en reportes de servicio, fechas, ubicaciones escritas por el usuario, novedades, fotografías, documentos, evidencias, historial de actividad, preferencias de notificación y registros necesarios para proteger las cuentas. También podremos tratar datos de facturación y suscripción cuando sean necesarios para la relación comercial.</p>
+        <p>Según el uso de la plataforma, podemos tratar nombres, correos electrónicos, datos de cuenta, empresa y rol asignados, información contenida en solicitudes, reportes, órdenes de trabajo, actividades, mantenimientos, inspecciones, asignaciones, fechas, ubicaciones escritas por el usuario, novedades, fotografías, documentos, evidencias, historial de seguimiento, preferencias de notificación y registros necesarios para proteger las cuentas. También podremos tratar datos de facturación y suscripción cuando sean necesarios para la relación comercial.</p>
         <h4>3. Finalidades</h4>
         <ul>
           <li>Crear, autenticar y administrar cuentas y permisos.</li>
           <li>Vincular usuarios con la empresa correspondiente y limitar el acceso a su información.</li>
-          <li>Crear, asignar, actualizar, consultar, cerrar y descargar reportes de servicio.</li>
-          <li>Almacenar evidencias y mantener el historial de seguimiento.</li>
+          <li>Crear, asignar, actualizar, consultar, cerrar y descargar reportes, solicitudes, órdenes de trabajo y registros de actividades operativas.</li>
+          <li>Almacenar evidencias y mantener el historial de seguimiento de los servicios y actividades gestionados.</li>
           <li>Enviar comunicaciones operativas, avisos y notificaciones solicitadas o necesarias para el servicio.</li>
           <li>Gestionar soporte, suscripciones, pagos, facturación y solicitudes.</li>
           <li>Prevenir accesos no autorizados, investigar incidentes y proteger los derechos de los usuarios.</li>
@@ -58,15 +58,15 @@ const SECTIONS = [
     body: (
       <>
         <h3>Términos y condiciones de uso</h3>
-        <p>Estos términos regulan el acceso y uso de DACATECH Reportes, una plataforma para registrar, administrar y consultar reportes de servicios técnicos, novedades, actividades, evidencias y cierres de atención. Al crear una cuenta o utilizar la plataforma, el usuario acepta estos términos. Las autorizaciones de datos personales se solicitan por separado cuando corresponde.</p>
+        <p>Estos términos regulan el acceso y uso de DACATECH Reportes, una plataforma multipropósito para que empresas de distintos sectores reciban, registren, asignen, atiendan y hagan seguimiento a novedades, solicitudes, órdenes de trabajo, mantenimientos, actividades operativas, inspecciones y demás servicios que presten. Al crear una cuenta o utilizar la plataforma, el usuario acepta estos términos. Las autorizaciones de datos personales se solicitan por separado cuando corresponde.</p>
         <h4>1. Cuentas y acceso</h4>
         <p>El usuario debe proporcionar información veraz, mantenerla actualizada y proteger sus credenciales. Las cuentas son personales. Los administradores de cada empresa deben asignar permisos apropiados y solicitar la desactivación de usuarios que ya no deban acceder.</p>
         <h4>2. Uso permitido</h4>
-        <p>La plataforma solo puede usarse para fines empresariales legítimos y conforme a los permisos asignados. Se prohíbe intentar acceder a información de otra empresa, suplantar identidades, interferir con el servicio, vulnerar controles de seguridad o cargar contenido ilícito o que infrinja derechos de terceros.</p>
+        <p>La plataforma puede utilizarse para gestionar los servicios y procesos operativos que cada empresa tenga habilitados, incluidos, entre otros, aseo y servicios generales, mantenimiento de instalaciones, infraestructura, obras, energía, comunicaciones, tecnología, seguridad, atención al cliente y otros servicios empresariales. Su uso debe ser legítimo y respetar los permisos asignados. Se prohíbe intentar acceder a información de otra empresa, suplantar identidades, interferir con el servicio, vulnerar controles de seguridad o cargar contenido ilícito o que infrinja derechos de terceros.</p>
         <h4>3. Reportes y evidencias</h4>
-        <p>La empresa usuaria y sus usuarios son responsables de la exactitud de los datos que registran y de tener autorización para compartir fotografías, documentos, firmas e información de terceros. Los reportes reflejan la información ingresada y no sustituyen inspecciones, certificaciones ni obligaciones previstas en contratos independientes.</p>
+        <p>La empresa usuaria y sus usuarios son responsables de la exactitud de los datos que registran y de tener autorización para compartir fotografías, documentos, firmas e información de terceros. Los registros reflejan la información ingresada por los usuarios y no sustituyen inspecciones, certificaciones, protocolos técnicos ni obligaciones previstas en contratos independientes.</p>
         <h4>4. Emergencias y tiempos de atención</h4>
-        <p>Registrar un reporte no significa que exista atención inmediata ni constituye un canal de emergencias. Los tiempos de atención dependen del acuerdo de servicio vigente. En situaciones urgentes, el usuario debe comunicarse por los canales de emergencia o contacto establecidos con su proveedor.</p>
+        <p>Registrar una solicitud, novedad u orden de trabajo no significa que exista atención inmediata ni constituye por sí mismo un canal de emergencias. Los tiempos de atención dependen del acuerdo de servicio vigente. En situaciones urgentes, el usuario debe comunicarse por los canales de emergencia o contacto establecidos con su proveedor.</p>
         <h4>5. Disponibilidad y cambios</h4>
         <p>Se procura mantener el servicio disponible, pero pueden existir interrupciones por mantenimiento, conectividad, incidentes o causas externas. Las actualizaciones sustanciales de estos términos se comunicarán cuando corresponda.</p>
         <h4>6. Suspensión</h4>
@@ -133,7 +133,7 @@ const SECTIONS = [
     body: (
       <>
         <h3>Autorización para el tratamiento de datos personales</h3>
-        <p>Al marcar voluntariamente la casilla de autorización, declaro que he leído la Política de Tratamiento de Datos Personales de {E.razonSocial} y que recibí información sobre las finalidades descritas. Autorizo, cuando legalmente corresponda, la recolección, almacenamiento, consulta, uso, actualización y circulación restringida de mis datos para administrar mi cuenta, asociarla a una empresa, gestionar reportes y evidencias, comunicar novedades, prestar soporte, administrar suscripciones y cumplir obligaciones legales o contractuales.</p>
+        <p>Al marcar voluntariamente la casilla de autorización, declaro que he leído la Política de Tratamiento de Datos Personales de {E.razonSocial} y que recibí información sobre las finalidades descritas. Autorizo, cuando legalmente corresponda, la recolección, almacenamiento, consulta, uso, actualización y circulación restringida de mis datos para administrar mi cuenta, asociarla a una empresa, gestionar solicitudes, reportes, órdenes de trabajo, actividades y evidencias, comunicar novedades, prestar soporte, administrar suscripciones y cumplir obligaciones legales o contractuales.</p>
         <p>Declaro conocer mis derechos a consultar, actualizar y rectificar mis datos, solicitar prueba de la autorización, conocer el uso dado a la información, presentar consultas y reclamos, y solicitar la supresión o revocatoria cuando legalmente proceda. Puedo ejercerlos escribiendo a <a href={`mailto:${E.correo}`}>{E.correo}</a>.</p>
         <p>No estoy obligado a autorizar el tratamiento de datos sensibles. Si alguna función excepcional requiere estos datos, se informará su carácter y finalidad y se solicitará autorización explícita independiente cuando sea legalmente posible.</p>
         <h4>Registro de la autorización</h4>
