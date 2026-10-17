@@ -38,8 +38,8 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
       <label>Cargo / área de trabajo<input value={jobTitle} onChange={e => setJobTitle(e.target.value)} maxLength={120} placeholder="Ej. Servicio administrativo, eventos, soldadura, sonido…" /></label>
       <label>Rol de acceso
         <select value={role} onChange={e => setRole(e.target.value)}>
-          <option value="customer">Cliente</option><option value="technician">Técnico</option>
-          <option value="admin">Administrador</option>
+          <option value="customer">Usuario de empresa</option><option value="technician">Responsable operativo</option>
+          <option value="admin">Administrador de empresa</option>
         </select>
       </label>
       <label>Empresa
@@ -253,18 +253,18 @@ export default function AdminPanel({ onMessage }) {
   return (
     <section className="content-card" aria-labelledby="adm-title">
       <div className="section-head">
-        <div><h2 id="adm-title">Empresas y usuarios</h2><p className="muted">Aprueba usuarios que confirmaron su correo, asígnales una empresa y define su rol desde aquí, sin entrar a Supabase.</p></div>
+        <div><h2 id="adm-title">Empresas y usuarios</h2><p className="muted">Gestiona los usuarios de tu empresa, asigna sus cargos libremente y define sus permisos. El administrador maestro DACATECH conserva el control global de la plataforma.</p></div>
       </div>
       <div className="company-panel" style={{ marginBottom: 20 }}>
         <h3><UserPlus size={18} aria-hidden="true" /> Crear cuenta desde DACATECH</h3>
-        <p className="muted">Registra un cliente, técnico o administrador y asígnale su empresa desde este panel.</p>
+        <p className="muted">Registra usuarios de tu empresa, escribe el cargo laboral que necesites y asigna el nivel de acceso correspondiente.</p>
         <form className="inline-form" onSubmit={createAccount}>
           <label>Nombre completo<input value={newUser.full_name} onChange={e => setNewUser(v => ({ ...v, full_name: e.target.value }))} required maxLength={120} autoComplete="name" /></label>
           <label>Correo electrónico<input type="email" value={newUser.email} onChange={e => setNewUser(v => ({ ...v, email: e.target.value }))} required autoComplete="email" /></label>
           <label>Contraseña inicial<input type="password" value={newUser.password} onChange={e => setNewUser(v => ({ ...v, password: e.target.value }))} required minLength={8} autoComplete="new-password" /></label>
           <label>Empresa<select value={newUser.company_id} onChange={e => setNewUser(v => ({ ...v, company_id: e.target.value }))} required><option value="">Seleccionar empresa</option>{companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label>
           <label>Cargo / área de trabajo<input value={newUser.job_title} onChange={e => setNewUser(v => ({ ...v, job_title: e.target.value }))} maxLength={120} placeholder="Ej. Servicio administrativo, eventos, soldadura, sonido…" /></label>
-          <label>Rol de acceso<select value={newUser.role} onChange={e => setNewUser(v => ({ ...v, role: e.target.value }))} required><option value="customer">Cliente</option><option value="technician">Técnico</option><option value="admin">Administrador</option></select></label>
+          <label>Rol de acceso<select value={newUser.role} onChange={e => setNewUser(v => ({ ...v, role: e.target.value }))} required><option value="customer">Usuario de empresa</option><option value="technician">Responsable operativo</option><option value="admin">Administrador de empresa</option></select></label>
           <button className="primary-btn compact" disabled={createBusy || !companies.length}><UserPlus size={16} aria-hidden="true" /> {createBusy ? 'Creando cuenta…' : 'Crear cuenta'}</button>
         </form>
       </div>
