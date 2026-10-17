@@ -35,7 +35,7 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
         </div>
       </div>
       <label>Nombre<input value={fullName} onChange={e => setFullName(e.target.value)} maxLength={120} placeholder="Nombre del usuario" /></label>
-      <label>Cargo / área de trabajo<input value={jobTitle} onChange={e => setJobTitle(e.target.value)} maxLength={120} list="job-title-suggestions" placeholder="Escribe o selecciona un cargo…" /></label>
+      <label>Cargo / área de trabajo<input value={jobTitle} onChange={e => setJobTitle(e.target.value)} maxLength={120} list="job-title-suggestions" placeholder="Escribe cualquier cargo…" /><select aria-label="Elegir cargo sugerido" defaultValue="" onChange={e => { if (e.target.value) setJobTitle(e.target.value); e.target.value = ""; }}><option value="">Ver catálogo de cargos…</option>{Array.from(document.querySelectorAll("#job-title-suggestions option")).map(o => o.value).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
       <label>Rol de acceso
         <select value={role} onChange={e => setRole(e.target.value)}>
           <option value="customer">Usuario de empresa</option><option value="technician">Responsable operativo</option>
@@ -264,7 +264,7 @@ export default function AdminPanel({ onMessage }) {
           <label>Correo electrónico<input type="email" value={newUser.email} onChange={e => setNewUser(v => ({ ...v, email: e.target.value }))} required autoComplete="email" /></label>
           <label>Contraseña inicial<input type="password" value={newUser.password} onChange={e => setNewUser(v => ({ ...v, password: e.target.value }))} required minLength={8} autoComplete="new-password" /></label>
           <label>Empresa<select value={newUser.company_id} onChange={e => setNewUser(v => ({ ...v, company_id: e.target.value }))} required><option value="">Seleccionar empresa</option>{companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label>
-          <label>Cargo / área de trabajo<input value={newUser.job_title} onChange={e => setNewUser(v => ({ ...v, job_title: e.target.value }))} maxLength={120} list="job-title-suggestions" placeholder="Escribe o selecciona un cargo…" /></label>
+          <label>Cargo / área de trabajo<input value={newUser.job_title} onChange={e => setNewUser(v => ({ ...v, job_title: e.target.value }))} maxLength={120} list="job-title-suggestions" placeholder="Escribe cualquier cargo…" /><select aria-label="Elegir cargo sugerido" defaultValue="" onChange={e => { if (e.target.value) setNewUser(v => ({ ...v, job_title: e.target.value })); e.target.value = ""; }}><option value="">Ver catálogo de cargos…</option>{Array.from(document.querySelectorAll("#job-title-suggestions option")).map(o => o.value).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
           <label>Rol de acceso<select value={newUser.role} onChange={e => setNewUser(v => ({ ...v, role: e.target.value }))} required><option value="customer">Usuario de empresa</option><option value="technician">Responsable operativo</option><option value="admin">Administrador de empresa</option></select></label>
           <button className="primary-btn compact" disabled={createBusy || !companies.length}><UserPlus size={16} aria-hidden="true" /> {createBusy ? 'Creando cuenta…' : 'Crear cuenta'}</button>
         </form>
