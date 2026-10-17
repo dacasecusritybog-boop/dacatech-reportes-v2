@@ -7,3 +7,6 @@
 
 .dacatech-logo{display:block;width:46px;height:46px;object-fit:contain;flex:0 0 46px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px #1e3048}
 @media(max-width:700px){.dacatech-logo{width:42px;height:42px;flex-basis:42px}.logo-row{align-items:center;gap:10px}.logo-row b{font-size:14px}.logo-row small{font-size:9px}}
+
+/* Fix safe-area/header: keep the iPhone status clock above the app branding. */
+@media(max-width:700px){.sidebar{padding-top:calc(env(safe-area-inset-top, 0px) + 12px)!important}.logo-row{min-height:54px;gap:12px!important;align-items:center!important}.dacatech-logo{width:42px!important;height:42px!important;flex:0 0 42px!important}.logo-row>div:last-child{min-width:0;display:flex;flex-direction:column;justify-content:center}.logo-row b{line-height:1.2;white-space:nowrap}.logo-row small{line-height:1.5}.sidebar{overflow:visible}}
