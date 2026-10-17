@@ -10,3 +10,31 @@
 
 /* Fix safe-area/header: keep the iPhone status clock above the app branding. */
 @media(max-width:700px){.sidebar{padding-top:calc(env(safe-area-inset-top, 0px) + 12px)!important}.logo-row{min-height:54px;gap:12px!important;align-items:center!important}.dacatech-logo{width:42px!important;height:42px!important;flex:0 0 42px!important}.logo-row>div:last-child{min-width:0;display:flex;flex-direction:column;justify-content:center}.logo-row b{line-height:1.2;white-space:nowrap}.logo-row small{line-height:1.5}.sidebar{overflow:visible}}
+
+/* Interfaz de acceso DACATECH inspirada en la referencia visual */
+.auth-layout{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:0;min-height:100svh;padding:28px 20px;background:radial-gradient(ellipse at 50% 12%,#0d3d70 0%,#06172d 36%,#030914 75%);overflow:hidden}
+.auth-layout>.brand-panel{display:none}
+.auth-tech-backdrop{position:absolute;inset:0 0 auto;height:55%;z-index:-1;overflow:hidden;background:linear-gradient(180deg,#03102266,#06172b55 58%,#030914 100%),repeating-linear-gradient(90deg,transparent 0 54px,#0b5b9a33 56px 59px),linear-gradient(135deg,#06172a,#0a2948 45%,#030914)}
+.auth-tech-backdrop:before,.auth-tech-backdrop:after{content:"";position:absolute;top:-12%;height:90%;width:2px;background:#1685ff;box-shadow:0 0 16px #1685ff;transform:rotate(24deg);opacity:.8}
+.auth-tech-backdrop:before{left:22%}.auth-tech-backdrop:after{right:19%;transform:rotate(-24deg)}
+.auth-camera{position:absolute;width:145px;height:62px;border:2px solid #c9d7e9;background:linear-gradient(145deg,#dce7f4,#526b88 55%,#142943);border-radius:18px 25px 20px 14px;box-shadow:0 15px 40px #0009;opacity:.92}
+.auth-camera:before{content:"";position:absolute;left:12px;bottom:-21px;width:52px;height:24px;border-radius:0 0 12px 12px;background:#647c98;border:2px solid #c9d7e9}
+.auth-camera:after{content:"";position:absolute;left:17px;top:10px;width:34px;height:34px;border-radius:50%;border:5px solid #172638;background:radial-gradient(circle at 45% 40%,#50caff,#06101e 35%,#000 70%);box-shadow:0 0 15px #1685ff}
+.camera-one{top:9%;left:-25px;transform:rotate(-18deg)}.camera-two{top:23%;right:-38px;transform:rotate(12deg) scale(.9)}
+.auth-brand-title{position:absolute;top:42%;left:0;right:0;text-align:center;color:#fff;text-shadow:0 4px 20px #0009}
+.auth-brand-title strong{font-family:'Space Grotesk Variable','Space Grotesk',sans-serif;font-size:clamp(38px,10vw,64px);letter-spacing:-2px;font-weight:900}
+.auth-brand-title small{display:block;margin-top:12px;font-size:10px;line-height:2;letter-spacing:4px;font-weight:700}
+.auth-card{width:min(100%,520px);max-width:520px;position:relative;margin-top:auto;background:linear-gradient(145deg,rgba(6,20,39,.96),rgba(2,10,23,.97));border:1px solid #174b80;border-radius:25px;padding:clamp(22px,5vw,36px);box-shadow:0 20px 70px #0008,0 0 28px #007bff12;backdrop-filter:blur(14px)}
+.auth-card h2{font-size:clamp(25px,6vw,34px);letter-spacing:-.7px;margin:0 0 6px}
+.auth-card>.muted{font-size:14px;margin:0 0 24px;color:#9aabc3}
+.auth-card .form-stack{gap:17px}
+.auth-card .form-stack label{gap:8px;font-size:13px}
+.auth-card .form-stack input{min-height:54px;border-radius:14px;padding:15px 16px;background:#07162a;border-color:#243e60;font-size:14px}
+.auth-card .form-stack input::placeholder{color:#8292a8}
+.auth-card .primary-btn{width:100%;min-height:58px;border-radius:15px;font-size:16px;margin-top:3px;background:linear-gradient(100deg,#087cff,#0875f0);box-shadow:0 8px 28px #007bff30}
+.mobile-brand{display:flex;align-items:center;gap:10px;margin-bottom:23px;letter-spacing:1px}
+.mobile-brand span{color:#fff}
+.mobile-brand span span{color:#9ce6ff}
+.auth-card .auth-footer{margin-top:22px}
+@media(min-width:701px){.auth-layout{justify-content:center;padding:48px 24px}.auth-tech-backdrop{height:100%}.auth-brand-title{top:12%}.camera-one{top:6%;left:12%}.camera-two{top:14%;right:12%}.auth-card{margin-top:250px}}
+@media(max-width:700px){.auth-layout{padding:calc(env(safe-area-inset-top,0px) + 18px) 18px calc(env(safe-area-inset-bottom,0px) + 22px);justify-content:flex-end;min-height:100svh}.auth-tech-backdrop{height:57%}.auth-brand-title{top:36%}.auth-brand-title strong{font-size:clamp(36px,10vw,54px)}.auth-brand-title small{font-size:9px;letter-spacing:3px}.auth-card{padding:23px 20px 22px;border-radius:23px;margin-top:42vh}.auth-card h2{font-size:27px}.auth-card>.muted{font-size:13px;margin-bottom:20px}.auth-card .form-stack input{min-height:52px}.auth-card .primary-btn{min-height:56px}.auth-card .auth-footer{margin-top:18px;padding-top:14px}}
