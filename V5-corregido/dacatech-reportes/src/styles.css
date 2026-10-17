@@ -198,3 +198,40 @@ body{min-width:0}
 .auth-card{box-shadow:0 18px 50px #0005!important;border-color:#1b3c5d!important}
 @media(max-width:700px){.auth-tech-backdrop{height:45%!important;min-height:300px!important;max-height:430px!important}.auth-brand-title{top:19%!important}.auth-brand-title strong{font-size:clamp(38px,10vw,52px)!important}.auth-brand-title small{font-size:8px!important;letter-spacing:2.5px!important}.auth-layout{justify-content:center!important;gap:0!important;padding-top:calc(env(safe-area-inset-top,0px) + 22px)!important;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px)!important}.auth-card{margin-top:clamp(190px,34vh,270px)!important}}
 @media(max-height:740px) and (max-width:700px){.auth-tech-backdrop{height:36%!important;min-height:250px!important}.auth-brand-title{top:15%!important}.auth-card{margin-top:clamp(155px,29vh,210px)!important}}
+
+/* Final mobile viewport and premium photo-background placement */
+html,body,#root{margin:0;width:100%;min-width:0;max-width:100%;overflow-x:hidden}
+@media(max-width:700px){
+ .auth-layout{box-sizing:border-box;width:100%;min-height:100svh;min-height:100dvh;height:auto;overflow-x:hidden;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 18px)!important;gap:0}
+ .auth-tech-backdrop{position:absolute;inset:0 0 auto;height:48svh;min-height:320px;max-height:470px;width:100%;background:linear-gradient(180deg,rgba(2,9,20,.08),rgba(2,9,20,.28) 62%,#020914 100%),url('/images/dacatech-security-bg.jpg') center 40%/cover no-repeat,linear-gradient(135deg,#06172a,#0a2948 50%,#030914)!important}
+ .auth-tech-backdrop:before,.auth-tech-backdrop:after{display:none!important}
+ .auth-camera,.auth-camera:before,.auth-camera:after{display:none!important}
+ .auth-brand-title{top:17%!important;left:12px;right:12px}
+ .auth-brand-title strong{font-size:clamp(36px,9.5vw,50px)!important;letter-spacing:-1.5px!important}
+ .auth-brand-title i{margin:8px auto 10px!important}
+ .auth-brand-title small{font-size:clamp(7px,2.2vw,9px)!important;letter-spacing:2.4px!important}
+ .auth-card{box-sizing:border-box;width:100%;max-width:480px;margin:clamp(190px,38svh,330px) auto 0!important;padding:22px 18px 20px!important;border-radius:22px;flex:0 0 auto}
+ .auth-card h2{font-size:clamp(25px,6.5vw,31px)!important}
+ .auth-card>.muted{font-size:13px!important;margin-bottom:18px!important}
+ .auth-card .form-stack{gap:13px!important}
+ .auth-field-control{min-height:52px!important;padding:0 12px!important;gap:10px!important}
+ .auth-card .form-stack .auth-field-control input{min-height:48px!important;font-size:14px!important}
+ .auth-options{gap:8px!important}
+ .auth-card .auth-submit{min-height:52px!important;font-size:15px!important}
+ .auth-card .auth-footer{margin-top:14px!important}
+}
+@media(max-width:390px){
+ .auth-layout{padding-left:12px!important;padding-right:12px!important}
+ .auth-card{padding:19px 15px 17px!important;margin-top:clamp(180px,35svh,260px)!important}
+ .auth-brand-title{top:16%!important}
+ .auth-card .form-stack{gap:11px!important}
+ .auth-field-control{min-height:48px!important}
+ .auth-card .form-stack .auth-field-control input{min-height:44px!important}
+ .auth-card .auth-submit{min-height:49px!important}
+}
+@media(max-height:740px) and (max-width:700px){
+ .auth-tech-backdrop{height:40svh;min-height:260px}
+ .auth-brand-title{top:14%!important}
+ .auth-card{margin-top:clamp(160px,30svh,220px)!important;padding-top:17px!important;padding-bottom:15px!important}
+ .auth-card .form-stack{gap:9px!important}
+}
