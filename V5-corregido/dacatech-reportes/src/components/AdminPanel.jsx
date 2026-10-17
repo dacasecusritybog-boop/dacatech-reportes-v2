@@ -209,8 +209,8 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
       <label>Cargo / área de trabajo<input value={jobTitle} onChange={e => setJobTitle(e.target.value)} maxLength={120} list="job-title-suggestions" placeholder="Escribe cualquier cargo…" /><select aria-label="Elegir cargo sugerido" defaultValue="" onChange={e => { if (e.target.value) setJobTitle(e.target.value); e.target.value = ""; }}><option value="">Ver catálogo de cargos…</option>{JOB_TITLE_SUGGESTIONS.map(v => <option key={v} value={v}>{v}</option>)}</select></label>
       <label>Rol de acceso
         <select value={role} onChange={e => setRole(e.target.value)}>
-          <option value="customer">Usuario de empresa</option><option value="technician">Responsable operativo</option>
-          <option value="admin">Administrador de empresa</option>
+          <option value="customer">Cliente / solicitante</option><option value="technician">Responsable operativo</option>
+          <option value="supervisor">Supervisor / coordinador</option><option value="admin">Administrador de empresa</option>
         </select>
       </label>
       <label>Empresa
