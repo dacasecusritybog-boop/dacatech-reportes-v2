@@ -248,7 +248,7 @@ export default function App() {
 
   // Centro de notificaciones dentro de la aplicación (solicitudes de registro para administradores).
   const loadAppNotifications = useCallback(async () => {
-    if (!supabase || profile?.role !== 'admin') return;
+    if (!supabase || !isPlatformOperator) return;
     const { data, error: notificationError } = await supabase
       .from('in_app_notifications').select('id,type,title,body,user_id,user_email,is_read,created_at')
       .order('created_at', { ascending: false }).limit(30);
@@ -257,7 +257,7 @@ export default function App() {
   }, [profile?.role]);
 
   useEffect(() => {
-    if (!session || profile?.role !== 'admin' || !profile?.is_active) return;
+    if (!session || !isPlatformOperator || !profile?.is_active) return;
     void loadAppNotifications();
     const channel = supabase.channel('dt-in-app-notifications-' + session.user.id)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'in_app_notifications' }, (payload) => {
@@ -265,7 +265,7 @@ export default function App() {
       })
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
-  }, [session?.user?.id, profile?.role, profile?.is_active, loadAppNotifications]);
+  }, [session?.user?.id, isPlatformOperator, profile?.is_active, loadAppNotifications]);
 
   async function markNotificationRead(notification) {
     if (!notification.is_read) {
@@ -521,7 +521,7 @@ export default function App() {
         <header className="topbar">
           <div><div className="eyebrow">CENTRO DE SOPORTE</div><h1>{titles[view]}</h1></div>
           <div className="top-actions">
-            {profile.role === 'admin' && <div className="app-notification-wrap" style={{ position: 'relative' }}>
+            {isPlatformOperator && <div className="app-notification-wrap" style={{ position: 'relative' }}>
               <button type="button" className="secondary-btn compact" aria-label={`Notificaciones internas: ${appNotifications.filter(n => !n.is_read).length} sin leer`} aria-expanded={showAppNotifications} onClick={() => setShowAppNotifications(open => !open)}>
                 <Bell size={18} aria-hidden="true" /> Notificaciones{appNotifications.some(n => !n.is_read) ? ` (${appNotifications.filter(n => !n.is_read).length})` : ''}
               </button>
