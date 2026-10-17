@@ -71,7 +71,7 @@ export default function AdminPanel({ onMessage }) {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [name, setName] = useState('');
-  const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: '', role: 'customer' });
+  const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: '', role: 'customer', job_title: '' });
   const [createBusy, setCreateBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -180,7 +180,8 @@ export default function AdminPanel({ onMessage }) {
           email: newUser.email.trim(),
           password: newUser.password,
           company_id: newUser.company_id,
-          role: newUser.role
+          role: newUser.role,
+          job_title: newUser.job_title.trim()
         }
       });
       if (error) {
@@ -197,7 +198,7 @@ export default function AdminPanel({ onMessage }) {
       if (data?.error || !data?.user?.id || data?.user?.company_id !== newUser.company_id || data?.user?.role !== newUser.role) {
         throw new Error(data?.error || 'El servidor no confirmó la cuenta con la empresa y el rol seleccionados.');
       }
-      setNewUser({ full_name: '', email: '', password: '', company_id: '', role: 'customer' });
+      setNewUser({ full_name: '', email: '', password: '', company_id: '', role: 'customer', job_title: '' });
       await load();
       onMessage('ok', 'Cuenta creada, vinculada a su empresa y configurada con el rol seleccionado.');
     } catch (error) {
@@ -262,7 +263,8 @@ export default function AdminPanel({ onMessage }) {
           <label>Correo electrónico<input type="email" value={newUser.email} onChange={e => setNewUser(v => ({ ...v, email: e.target.value }))} required autoComplete="email" /></label>
           <label>Contraseña inicial<input type="password" value={newUser.password} onChange={e => setNewUser(v => ({ ...v, password: e.target.value }))} required minLength={8} autoComplete="new-password" /></label>
           <label>Empresa<select value={newUser.company_id} onChange={e => setNewUser(v => ({ ...v, company_id: e.target.value }))} required><option value="">Seleccionar empresa</option>{companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label>
-          <label>Rol<select value={newUser.role} onChange={e => setNewUser(v => ({ ...v, role: e.target.value }))} required><option value="customer">Cliente</option><option value="technician">Técnico</option><option value="admin">Administrador</option></select></label>
+          <label>Cargo / área de trabajo<input value={newUser.job_title} onChange={e => setNewUser(v => ({ ...v, job_title: e.target.value }))} maxLength={120} placeholder="Ej. Servicio administrativo, eventos, soldadura, sonido…" /></label>
+          <label>Rol de acceso<select value={newUser.role} onChange={e => setNewUser(v => ({ ...v, role: e.target.value }))} required><option value="customer">Cliente</option><option value="technician">Técnico</option><option value="admin">Administrador</option></select></label>
           <button className="primary-btn compact" disabled={createBusy || !companies.length}><UserPlus size={16} aria-hidden="true" /> {createBusy ? 'Creando cuenta…' : 'Crear cuenta'}</button>
         </form>
       </div>
