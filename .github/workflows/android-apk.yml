@@ -47,7 +47,24 @@ jobs:
       - name: Install Capacitor Android tools
         run: npm install @capacitor/core@^6 @capacitor/cli@^6 @capacitor/android@^6
 
+      - name: Verify Supabase build configuration
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Faltan los secretos VITE_SUPABASE_URL y/o VITE_SUPABASE_PUBLISHABLE_KEY en GitHub Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          case "$VITE_SUPABASE_URL" in
+            https://*.supabase.co) ;;
+            *) echo "::error::VITE_SUPABASE_URL debe ser la URL del proyecto Supabase, no una URL REST."; exit 1 ;;
+          esac
+
       - name: Build web app
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: npm run build
 
       - name: Create Android project
