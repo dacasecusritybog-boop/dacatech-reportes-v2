@@ -34,10 +34,12 @@ jobs:
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
-        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+        uses: android-actions/setup-android@v4
+        with:
+          cmdline-tools-version: "15859902"
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
 
       - name: Install web dependencies
         run: npm ci
@@ -58,7 +60,7 @@ jobs:
         working-directory: V5-corregido/dacatech-reportes/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew --no-daemon assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
