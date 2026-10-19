@@ -1,0 +1,6 @@
+{
+  "appId": "com.dacatech.reportes",
+  "appName": "DACATECH Reportes V2",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
