@@ -241,7 +241,7 @@ export default function App() {
     setReportsLoading(true);
     loadReports().finally(() => setReportsLoading(false));
     if (profile.role === 'admin') {
-      supabase.from('profiles').select('id,full_name,role').in('role', ['admin', 'technician']).eq('is_active', true).order('full_name')
+      supabase.from('profiles').select('id,full_name,role').eq('company_id', profile.company_id).in('role', ['admin', 'technician']).eq('is_active', true).order('full_name')
         .then(({ data }) => setStaff(data || []));
     }
   }, [session?.user?.id, profile?.id, profile?.is_active, profile?.role, loadReports]); // eslint-disable-line
@@ -546,7 +546,7 @@ export default function App() {
           <ReportsView profile={profile} reports={reports} staff={staff} active={active} setActive={setActive}
             onNew={() => setShowCreate(true)} onSaveFollowup={saveFollowup} onDeleteReport={deleteReport} saving={saving} loading={reportsLoading} />
         )}
-        {view === 'admin' && profile.role === 'admin' && <AdminPanel onMessage={adminMessage} />}
+        {view === 'admin' && profile.role === 'admin' && <AdminPanel profile={profile} isPlatformOperator={isPlatformOperator} onMessage={adminMessage} />}
         {view === 'subscription' && profile.role === 'admin' && <SubscriptionPanel profile={profile} onMessage={adminMessage} />}
         {view === 'platform-admin' && isPlatformOperator && <PlatformAdminPanel onMessage={adminMessage} />}
         {view === 'report-format' && profile.role === 'admin' && <ReportFormatSettings profile={profile} onMessage={adminMessage} />}
