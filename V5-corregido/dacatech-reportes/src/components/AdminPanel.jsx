@@ -242,7 +242,7 @@ export default function AdminPanel({ profile, isPlatformOperator = false, onMess
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [name, setName] = useState('');
-  const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: profile?.company_id || '', role: 'customer', job_title: '' });
+  const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: isPlatformOperator ? '' : (profile?.company_id || ''), role: 'customer', job_title: '' });
   const [createBusy, setCreateBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -250,13 +250,15 @@ export default function AdminPanel({ profile, isPlatformOperator = false, onMess
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [u, c] = await Promise.all([supabase.rpc('dt_admin_users'), supabase.from('companies').select('id,name,is_active').eq('id', profile.company_id).order('name')]);
+    let companyQuery = supabase.from('companies').select('id,name,is_active').order('name');
+    if (!isPlatformOperator) companyQuery = companyQuery.eq('id', profile.company_id);
+    const [u, c] = await Promise.all([supabase.rpc('dt_admin_users'), companyQuery]);
     if (u.error) onMessage('error', 'No se pudieron cargar las solicitudes: ' + u.error.message);
     else setUsers(Array.isArray(u.data) ? u.data : []);
     if (c.error) onMessage('error', 'No se pudieron cargar las empresas: ' + c.error.message);
     else setCompanies(c.data || []);
     setLoading(false);
-  }, [onMessage, profile?.company_id]);
+  }, [onMessage, profile?.company_id, isPlatformOperator]);
 
   useEffect(() => {
     load();
@@ -369,7 +371,7 @@ export default function AdminPanel({ profile, isPlatformOperator = false, onMess
       if (data?.error || !data?.user?.id || data?.user?.company_id !== newUser.company_id || data?.user?.role !== newUser.role) {
         throw new Error(data?.error || 'El servidor no confirmó la cuenta con la empresa y el rol seleccionados.');
       }
-      setNewUser({ full_name: '', email: '', password: '', company_id: profile?.company_id || '', role: 'customer', job_title: '' });
+      setNewUser({ full_name: '', email: '', password: '', company_id: isPlatformOperator ? '' : (profile?.company_id || ''), role: 'customer', job_title: '' });
       await load();
       onMessage('ok', 'Cuenta creada, vinculada a su empresa y configurada con el rol seleccionado.');
     } catch (error) {
