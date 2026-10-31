@@ -237,12 +237,12 @@ function UserRow({ u, companies, onSave, onDeactivate }) {
   );
 }
 
-export default function AdminPanel({ onMessage }) {
+export default function AdminPanel({ profile, isPlatformOperator = false, onMessage }) {
   const [tab, setTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [name, setName] = useState('');
-  const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: '', role: 'customer', job_title: '' });
+  const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', company_id: profile?.company_id || '', role: 'customer', job_title: '' });
   const [createBusy, setCreateBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -250,13 +250,13 @@ export default function AdminPanel({ onMessage }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [u, c] = await Promise.all([supabase.rpc('dt_admin_users'), supabase.from('companies').select('*').order('name')]);
+    const [u, c] = await Promise.all([supabase.rpc('dt_admin_users'), supabase.from('companies').select('id,name,is_active').eq('id', profile.company_id).order('name')]);
     if (u.error) onMessage('error', 'No se pudieron cargar las solicitudes: ' + u.error.message);
     else setUsers(Array.isArray(u.data) ? u.data : []);
     if (c.error) onMessage('error', 'No se pudieron cargar las empresas: ' + c.error.message);
     else setCompanies(c.data || []);
     setLoading(false);
-  }, [onMessage]);
+  }, [onMessage, profile?.company_id]);
 
   useEffect(() => {
     load();
@@ -369,7 +369,7 @@ export default function AdminPanel({ onMessage }) {
       if (data?.error || !data?.user?.id || data?.user?.company_id !== newUser.company_id || data?.user?.role !== newUser.role) {
         throw new Error(data?.error || 'El servidor no confirmó la cuenta con la empresa y el rol seleccionados.');
       }
-      setNewUser({ full_name: '', email: '', password: '', company_id: '', role: 'customer', job_title: '' });
+      setNewUser({ full_name: '', email: '', password: '', company_id: profile?.company_id || '', role: 'customer', job_title: '' });
       await load();
       onMessage('ok', 'Cuenta creada, vinculada a su empresa y configurada con el rol seleccionado.');
     } catch (error) {
@@ -417,7 +417,7 @@ export default function AdminPanel({ onMessage }) {
   }
 
   // Los clientes dados de baja desaparecen de la lista de gestión; sus perfiles e historial se conservan.
-  const visibleUsers = users.filter(u => !(u.role === 'customer' && u.is_active === false));
+  const visibleUsers = users.filter(u => String(u.company_id) === String(profile?.company_id) && !(u.role === 'customer' && u.is_active === false));
   const pendingCount = visibleUsers.filter(u => Boolean(u.is_active) && (!u.profile_exists || !u.company_id)).length;
   const pendingUsers = visibleUsers.filter(u => Boolean(u.is_active) && (!u.profile_exists || !u.company_id));
 
@@ -434,7 +434,7 @@ export default function AdminPanel({ onMessage }) {
           <label>Nombre completo<input value={newUser.full_name} onChange={e => setNewUser(v => ({ ...v, full_name: e.target.value }))} required maxLength={120} autoComplete="name" /></label>
           <label>Correo electrónico<input type="email" value={newUser.email} onChange={e => setNewUser(v => ({ ...v, email: e.target.value }))} required autoComplete="email" /></label>
           <label>Contraseña inicial<input type="password" value={newUser.password} onChange={e => setNewUser(v => ({ ...v, password: e.target.value }))} required minLength={8} autoComplete="new-password" /></label>
-          <label>Empresa<select value={newUser.company_id} onChange={e => setNewUser(v => ({ ...v, company_id: e.target.value }))} required><option value="">Seleccionar empresa</option>{companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label>
+          <label>Empresa<select value={newUser.company_id} disabled={!isPlatformOperator} onChange={e => setNewUser(v => ({ ...v, company_id: e.target.value }))} required><option value="">Seleccionar empresa</option>{companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label>
           <label>Cargo / área de trabajo<input value={newUser.job_title} onChange={e => setNewUser(v => ({ ...v, job_title: e.target.value }))} maxLength={120} list="job-title-suggestions" placeholder="Escribe cualquier cargo…" /><select aria-label="Elegir cargo sugerido" defaultValue="" onChange={e => { if (e.target.value) setNewUser(v => ({ ...v, job_title: e.target.value })); e.target.value = ""; }}><option value="">Ver catálogo de cargos…</option>{JOB_TITLE_SUGGESTIONS.map(v => <option key={v} value={v}>{v}</option>)}</select></label>
           <label>Rol de acceso<select value={newUser.role} onChange={e => setNewUser(v => ({ ...v, role: e.target.value }))} required><option value="customer">Cliente / solicitante</option><option value="technician">Responsable operativo</option><option value="supervisor">Supervisor / coordinador</option><option value="admin">Administrador de empresa</option></select></label>
           <button className="primary-btn compact" disabled={createBusy || !companies.length}><UserPlus size={16} aria-hidden="true" /> {createBusy ? 'Creando cuenta…' : 'Crear cuenta'}</button>
@@ -442,7 +442,7 @@ export default function AdminPanel({ onMessage }) {
       </div>
       <div className="filter-row" role="tablist" aria-label="Administración">
         <button type="button" role="tab" aria-selected={tab === 'users'} className={`chip ${tab === 'users' ? 'on' : ''}`} onClick={() => setTab('users')}><Users size={15} aria-hidden="true" /> Usuarios{pendingCount > 0 && ` (${pendingCount} pendientes)`}</button>
-        <button type="button" role="tab" aria-selected={tab === 'companies'} className={`chip ${tab === 'companies' ? 'on' : ''}`} onClick={() => setTab('companies')}><Building2 size={15} aria-hidden="true" /> Empresas ({companies.length})</button>
+        {isPlatformOperator && <button type="button" role="tab" aria-selected={tab === 'companies'} className={`chip ${tab === 'companies' ? 'on' : ''}`} onClick={() => setTab('companies')}><Building2 size={15} aria-hidden="true" /> Empresas ({companies.length})</button>}
       </div>
       {loading ? <div className="empty-state"><div className="spinner" /></div> : tab === 'users' ? (
         <div className="user-list">
