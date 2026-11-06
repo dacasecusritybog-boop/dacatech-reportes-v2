@@ -124,29 +124,29 @@ export default function ReportsView({ profile, reports, staff, active, setActive
   const [resolution, setResolution] = useState('');
   const [evidence, setEvidence] = useState([]);
   const [activityDescription, setActivityDescription] = useState('');
-  const [activityPhoto, setActivityPhoto] = useState(null);
+  const [beforePhoto, setBeforePhoto] = useState(null);
+  const [afterPhoto, setAfterPhoto] = useState(null);
   const [finishingDay, setFinishingDay] = useState(false);
   const isFieldWorker = !['admin', 'supervisor', 'customer'].includes(profile.role);
 
   async function saveWorkActivity(e) {
     e.preventDefault();
     if (!activityDescription.trim()) return;
-    if (!activityPhoto) {
-      alert('Toma o adjunta una fotografía de esta actividad.');
+    if (!beforePhoto || !afterPhoto) {
+      alert('Adjunta una foto del ANTES y otra del DESPUÉS. En cada caso puedes tomarla con la cámara o elegirla de la galería.');
       return;
     }
     const ok = await onSaveFollowup({
       report: current,
       message: activityDescription.trim(),
-      evidence: [activityPhoto],
-      evidenceCaption: activityDescription.trim(),
+      evidence: [{ file: beforePhoto, caption: `ANTES — ${activityDescription.trim()}` }, { file: afterPhoto, caption: `DESPUÉS — ${activityDescription.trim()}` }],
       activityOnly: true
     });
     if (ok) {
       setActivityDescription('');
-      setActivityPhoto(null);
-      const picker = document.getElementById('work-activity-photo');
-      if (picker) picker.value = '';
+      setBeforePhoto(null);
+      setAfterPhoto(null);
+      ['work-before-camera', 'work-before-gallery', 'work-after-camera', 'work-after-gallery'].forEach((id) => { const picker = document.getElementById(id); if (picker) picker.value = ''; });
     }
   }
 
@@ -256,23 +256,36 @@ export default function ReportsView({ profile, reports, staff, active, setActive
               <p className="muted">Registra cada paso del servicio. Toma una foto, describe lo que hiciste y guarda. Después podrás registrar la siguiente actividad.</p>
               <form onSubmit={saveWorkActivity}>
                 <div className="work-photo-picker">
-                  <span className="detail-label">Fotografía de esta actividad</span>
-                  <div className="work-photo-actions">
-                    <label className="secondary-btn work-photo-btn">
-                      <Camera size={18} aria-hidden="true" /> Tomar foto ahora
-                      <input id="work-activity-photo" type="file" accept="image/*" capture="environment" required onChange={(e) => setActivityPhoto(e.target.files?.[0] || null)} />
-                    </label>
-                    <label className="secondary-btn work-photo-btn">
-                      <ImagePlus size={18} aria-hidden="true" /> Elegir de galería
-                      <input type="file" accept="image/*" onChange={(e) => setActivityPhoto(e.target.files?.[0] || null)} />
-                    </label>
+                  <span className="detail-label">Fotografías del trabajo</span>
+                  <div className="work-photo-stage">
+                    <b>1. ANTES — cómo estaba</b>
+                    <div className="work-photo-actions">
+                      <label className="secondary-btn work-photo-btn"><Camera size={18} aria-hidden="true" /> Tomar foto
+                        <input id="work-before-camera" type="file" accept="image/*" capture="environment" onChange={(e) => setBeforePhoto(e.target.files?.[0] || null)} />
+                      </label>
+                      <label className="secondary-btn work-photo-btn"><ImagePlus size={18} aria-hidden="true" /> Elegir de galería
+                        <input id="work-before-gallery" type="file" accept="image/*" onChange={(e) => setBeforePhoto(e.target.files?.[0] || null)} />
+                      </label>
+                    </div>
+                    {beforePhoto && <small>Antes: {beforePhoto.name}</small>}
+                  </div>
+                  <div className="work-photo-stage">
+                    <b>2. DESPUÉS — cómo quedó</b>
+                    <div className="work-photo-actions">
+                      <label className="secondary-btn work-photo-btn"><Camera size={18} aria-hidden="true" /> Tomar foto
+                        <input id="work-after-camera" type="file" accept="image/*" capture="environment" onChange={(e) => setAfterPhoto(e.target.files?.[0] || null)} />
+                      </label>
+                      <label className="secondary-btn work-photo-btn"><ImagePlus size={18} aria-hidden="true" /> Elegir de galería
+                        <input id="work-after-gallery" type="file" accept="image/*" onChange={(e) => setAfterPhoto(e.target.files?.[0] || null)} />
+                      </label>
+                    </div>
+                    {afterPhoto && <small>Después: {afterPhoto.name}</small>}
                   </div>
                 </div>
-                {activityPhoto && <small>Fotografía lista: {activityPhoto.name}</small>}
                 <label>¿Qué trabajo realizaste?
                   <textarea value={activityDescription} onChange={(e) => setActivityDescription(e.target.value)} placeholder="Ej.: Instalé la cámara en el acceso principal, realicé el ponchado y verifiqué la señal..." rows="3" required />
                 </label>
-                <button type="submit" className="primary-btn" disabled={saving || !activityPhoto || !activityDescription.trim()}>
+                <button type="submit" className="primary-btn" disabled={saving || !beforePhoto || !afterPhoto || !activityDescription.trim()}>
                   {saving ? 'Guardando actividad…' : 'Guardar actividad y registrar siguiente'} <ArrowRight size={17} aria-hidden="true" />
                 </button>
               </form>
