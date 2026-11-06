@@ -137,3 +137,10 @@ table{max-width:100%}
   .detail-grid{grid-template-columns:minmax(0,1fr)}
   .top-actions .primary-btn{flex:1}
 }
+
+
+/* Selector de evidencia: cámara o galería */
+.work-photo-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.work-photo-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;position:relative;min-height:44px;cursor:pointer}
+.work-photo-btn input[type="file"]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+@media(max-width:480px){.work-photo-actions{display:grid;grid-template-columns:minmax(0,1fr)}.work-photo-btn{width:100%;max-width:100%}}
