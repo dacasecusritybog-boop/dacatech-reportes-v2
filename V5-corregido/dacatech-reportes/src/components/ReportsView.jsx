@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, AlertCircle, ArrowRight, CheckCircle2, ClipboardList, Clock3, FileDown, FileText, Plus, Search, Ticket, Trash2, UploadCloud, X } from 'lucide-react';
+import { Activity, AlertCircle, ArrowRight, CheckCircle2, ClipboardList, Clock3, FileDown, FileText, Plus, Search, Ticket, Trash2, UploadCloud, Camera, ImagePlus, X } from 'lucide-react';
 import PhotoGallery from './PhotoGallery';
 import { fmtDate, roleLabel, statusClass, statuses } from '../lib/constants';
 
@@ -255,9 +255,19 @@ export default function ReportsView({ profile, reports, staff, active, setActive
               <h3 id="worklog-title"><Activity size={18} aria-hidden="true" /> Bitácora de jornada</h3>
               <p className="muted">Registra cada paso del servicio. Toma una foto, describe lo que hiciste y guarda. Después podrás registrar la siguiente actividad.</p>
               <form onSubmit={saveWorkActivity}>
-                <label>Fotografía de esta actividad
-                  <input id="work-activity-photo" type="file" accept="image/*" capture="environment" required onChange={(e) => setActivityPhoto(e.target.files?.[0] || null)} />
-                </label>
+                <div className="work-photo-picker">
+                  <span className="detail-label">Fotografía de esta actividad</span>
+                  <div className="work-photo-actions">
+                    <label className="secondary-btn work-photo-btn">
+                      <Camera size={18} aria-hidden="true" /> Tomar foto ahora
+                      <input id="work-activity-photo" type="file" accept="image/*" capture="environment" required onChange={(e) => setActivityPhoto(e.target.files?.[0] || null)} />
+                    </label>
+                    <label className="secondary-btn work-photo-btn">
+                      <ImagePlus size={18} aria-hidden="true" /> Elegir de galería
+                      <input type="file" accept="image/*" onChange={(e) => setActivityPhoto(e.target.files?.[0] || null)} />
+                    </label>
+                  </div>
+                </div>
                 {activityPhoto && <small>Fotografía lista: {activityPhoto.name}</small>}
                 <label>¿Qué trabajo realizaste?
                   <textarea value={activityDescription} onChange={(e) => setActivityDescription(e.target.value)} placeholder="Ej.: Instalé la cámara en el acceso principal, realicé el ponchado y verifiqué la señal..." rows="3" required />
