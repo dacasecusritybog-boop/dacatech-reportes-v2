@@ -123,6 +123,43 @@ export default function ReportsView({ profile, reports, staff, active, setActive
   const [message, setMessage] = useState('');
   const [resolution, setResolution] = useState('');
   const [evidence, setEvidence] = useState([]);
+  const [activityDescription, setActivityDescription] = useState('');
+  const [activityPhoto, setActivityPhoto] = useState(null);
+  const [finishingDay, setFinishingDay] = useState(false);
+  const isFieldWorker = !['admin', 'supervisor', 'customer'].includes(profile.role);
+
+  async function saveWorkActivity(e) {
+    e.preventDefault();
+    if (!activityDescription.trim()) return;
+    if (!activityPhoto) {
+      alert('Toma o adjunta una fotografía de esta actividad.');
+      return;
+    }
+    const ok = await onSaveFollowup({
+      report: current,
+      message: activityDescription.trim(),
+      evidence: [activityPhoto],
+      evidenceCaption: activityDescription.trim(),
+      activityOnly: true
+    });
+    if (ok) {
+      setActivityDescription('');
+      setActivityPhoto(null);
+      const picker = document.getElementById('work-activity-photo');
+      if (picker) picker.value = '';
+    }
+  }
+
+  async function finishWorkDay() {
+    setFinishingDay(true);
+    const ok = await onSaveFollowup({
+      report: current,
+      message: 'Jornada finalizada por ' + (profile.full_name || 'el responsable') + '.',
+      activityOnly: true
+    });
+    if (ok) setActivityDescription('');
+    setFinishingDay(false);
+  }
 
   useEffect(() => {
     if (!current) return;
@@ -212,6 +249,28 @@ export default function ReportsView({ profile, reports, staff, active, setActive
               <div className="timeline-item" key={u.id}><div className="timeline-dot" aria-hidden="true" /><div><b>{u.author_name || 'Equipo responsable'}</b><p>{u.message}</p><small>{fmtDate(u.created_at)}</small></div></div>
             ))}
           </div>
+
+          {isFieldWorker && (
+            <section className="staff-panel worklog-panel" aria-labelledby="worklog-title">
+              <h3 id="worklog-title"><Activity size={18} aria-hidden="true" /> Bitácora de jornada</h3>
+              <p className="muted">Registra cada paso del servicio. Toma una foto, describe lo que hiciste y guarda. Después podrás registrar la siguiente actividad.</p>
+              <form onSubmit={saveWorkActivity}>
+                <label>Fotografía de esta actividad
+                  <input id="work-activity-photo" type="file" accept="image/*" capture="environment" required onChange={(e) => setActivityPhoto(e.target.files?.[0] || null)} />
+                </label>
+                {activityPhoto && <small>Fotografía lista: {activityPhoto.name}</small>}
+                <label>¿Qué trabajo realizaste?
+                  <textarea value={activityDescription} onChange={(e) => setActivityDescription(e.target.value)} placeholder="Ej.: Instalé la cámara en el acceso principal, realicé el ponchado y verifiqué la señal..." rows="3" required />
+                </label>
+                <button type="submit" className="primary-btn" disabled={saving || !activityPhoto || !activityDescription.trim()}>
+                  {saving ? 'Guardando actividad…' : 'Guardar actividad y registrar siguiente'} <ArrowRight size={17} aria-hidden="true" />
+                </button>
+              </form>
+              <button type="button" className="secondary-btn" style={{ marginTop: 12 }} disabled={saving || finishingDay} onClick={finishWorkDay}>
+                {finishingDay ? 'Cerrando jornada…' : 'Finalizar jornada'}
+              </button>
+            </section>
+          )}
 
           {isStaff && (
             <form className="staff-panel" onSubmit={(e) => { e.preventDefault(); onSaveFollowup({ report: current, newStatus, assigned, message, resolution, evidence }); }}>
