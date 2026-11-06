@@ -229,8 +229,13 @@ export default function App() {
   const loadReports = useCallback(async () => {
     if (!supabase || !profile) return;
     let q = supabase.from('reports').select(REPORT_SELECT).order('created_at', { ascending: false });
-    if (profile.role === 'customer') q = q.eq('company_id', profile.company_id);
-    else if (profile.role === 'technician') q = q.or(`assigned_to.eq.${profile.id},created_by.eq.${profile.id}`);
+    if (profile.role === 'customer') {
+      q = q.eq('company_id', profile.company_id);
+    } else if (!['admin', 'supervisor'].includes(profile.role)) {
+      // Toda cuenta operativa (no solo el rol "technician") ve los reportes
+      // que le asignaron y los que ella misma registró.
+      q = q.or(`assigned_to.eq.${profile.id},created_by.eq.${profile.id}`);
+    }
     const { data, error: err } = await q;
     if (err) setError('No se pudieron cargar los reportes: ' + err.message);
     else setReports(data || []);
@@ -321,7 +326,14 @@ export default function App() {
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'reports' }, (p) => {
         refresh();
-        if (!mine()) addToast({ title: `Reporte #${p.new.ticket_number ?? ''}: ${p.new.status}`, body: p.new.title, reportId: p.new.id });
+        if (!mine()) {
+          const justAssignedToMe = p.new.assigned_to === profile.id && p.old?.assigned_to !== profile.id;
+          addToast({
+            title: justAssignedToMe ? 'Te asignaron un reporte' : `Reporte #${p.new.ticket_number ?? ''}: ${p.new.status}`,
+            body: p.new.title,
+            reportId: p.new.id
+          });
+        }
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'report_updates' }, (p) => {
         refresh();
