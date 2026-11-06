@@ -241,7 +241,7 @@ export default function App() {
     setReportsLoading(true);
     loadReports().finally(() => setReportsLoading(false));
     if (profile.role === 'admin') {
-      supabase.from('profiles').select('id,full_name,role').eq('company_id', profile.company_id).in('role', ['admin', 'technician']).eq('is_active', true).order('full_name')
+      supabase.from('profiles').select('id,full_name,role').eq('company_id', profile.company_id).in('role', ['admin', 'supervisor', 'technician']).eq('is_active', true).order('full_name')
         .then(({ data }) => setStaff(data || []));
     }
   }, [session?.user?.id, profile?.id, profile?.is_active, profile?.role, loadReports]); // eslint-disable-line
