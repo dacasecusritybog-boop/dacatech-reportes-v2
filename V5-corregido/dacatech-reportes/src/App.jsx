@@ -240,9 +240,25 @@ export default function App() {
     if (!session || !profile?.is_active) return;
     setReportsLoading(true);
     loadReports().finally(() => setReportsLoading(false));
-    if (profile.role === 'admin') {
-      supabase.from('profiles').select('id,full_name,role').eq('company_id', profile.company_id).in('role', ['admin', 'supervisor', 'technician']).eq('is_active', true).order('full_name')
-        .then(({ data }) => setStaff(data || []));
+    if (['admin', 'supervisor'].includes(profile.role)) {
+      // Todas las cuentas operativas activas registradas en esta empresa.
+      supabase.from('profiles')
+        .select('id,full_name,role')
+        .eq('company_id', profile.company_id)
+        .eq('is_active', true)
+        .neq('role', 'customer')
+        .order('full_name')
+        .then(({ data, error: staffError }) => {
+          if (staffError) {
+            console.error('No se pudo cargar el personal para asignación:', staffError.message);
+            setStaff([]);
+            setError('No se pudo cargar el personal para asignar: ' + staffError.message);
+          } else {
+            setStaff(data || []);
+          }
+        });
+    } else {
+      setStaff([]);
     }
   }, [session?.user?.id, profile?.id, profile?.is_active, profile?.role, loadReports]); // eslint-disable-line
 
