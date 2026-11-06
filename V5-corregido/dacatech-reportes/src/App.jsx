@@ -375,7 +375,7 @@ export default function App() {
   }, [loadReports, openReport]);
 
   /* ---------- acciones ---------- */
-  async function uploadPhotos(reportId, selected, photoType) {
+  async function uploadPhotos(reportId, selected, photoType, caption = '') {
     const rows = [];
     for (const file of selected) {
       if (!file.type.startsWith('image/')) throw new Error('Solo se permiten imágenes.');
@@ -383,7 +383,7 @@ export default function App() {
       const path = `${reportId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
       const { error: upErr } = await supabase.storage.from('report-photos').upload(path, file, { contentType: file.type, upsert: false });
       if (upErr) throw upErr;
-      rows.push({ report_id: reportId, uploaded_by: session.user.id, storage_path: path, photo_type: photoType, caption: file.name });
+      rows.push({ report_id: reportId, uploaded_by: session.user.id, storage_path: path, photo_type: photoType, caption: caption?.trim() || file.name });
     }
     if (rows.length) {
       const { error: dbErr } = await supabase.from('report_photos').insert(rows);
@@ -405,12 +405,12 @@ export default function App() {
     finally { setSaving(false); }
   }
 
-  async function saveFollowup({ report, newStatus, assigned, message, resolution, evidence, customer }) {
+  async function saveFollowup({ report, newStatus, assigned, message, resolution, evidence, evidenceCaption, customer, activityOnly }) {
     setSaving(true); setError(''); lastLocalWrite.current = Date.now();
     try {
       const author = profile.full_name || session.user.email;
-      if (evidence?.length) await uploadPhotos(report.id, evidence, customer ? 'customer' : 'service');
-      if (!customer) {
+      if (evidence?.length) await uploadPhotos(report.id, evidence, customer ? 'customer' : 'service', evidenceCaption || message);
+      if (!customer && !activityOnly) {
         const patch = { status: newStatus, updated_at: new Date().toISOString() };
         if (['admin', 'supervisor'].includes(profile.role) && (assigned || null) !== (report.assigned_to || null)) patch.assigned_to = assigned || null;
         if (['Solucionado', 'Cerrado'].includes(newStatus)) { patch.resolution_summary = resolution; if (newStatus === 'Cerrado') patch.closed_at = new Date().toISOString(); }
@@ -421,9 +421,10 @@ export default function App() {
         const { error: msgErr } = await supabase.from('report_updates').insert({ report_id: report.id, author_id: session.user.id, author_name: author, message: message.trim() });
         if (msgErr) throw msgErr;
       }
-      setNotice(customer ? 'Mensaje enviado.' : 'Seguimiento guardado.');
+      setNotice(customer ? 'Mensaje enviado.' : activityOnly ? 'Actividad registrada en la bitácora.' : 'Seguimiento guardado.');
       await loadReports();
-    } catch (err) { setError(err.message || 'No fue posible guardar los cambios.'); }
+      return true;
+    } catch (err) { setError(err.message || 'No fue posible guardar los cambios.'); return false; }
     finally { setSaving(false); }
   }
 
