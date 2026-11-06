@@ -377,13 +377,15 @@ export default function App() {
   /* ---------- acciones ---------- */
   async function uploadPhotos(reportId, selected, photoType, caption = '') {
     const rows = [];
-    for (const file of selected) {
-      if (!file.type.startsWith('image/')) throw new Error('Solo se permiten imágenes.');
+    for (const item of selected) {
+      const file = item instanceof File ? item : item.file;
+      const photoCaption = item instanceof File ? caption : (item.caption || caption);
+      if (!file?.type?.startsWith('image/')) throw new Error('Solo se permiten imágenes.');
       if (file.size > 10 * 1024 * 1024) throw new Error(`${file.name} supera el máximo de 10 MB.`);
       const path = `${reportId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
       const { error: upErr } = await supabase.storage.from('report-photos').upload(path, file, { contentType: file.type, upsert: false });
       if (upErr) throw upErr;
-      rows.push({ report_id: reportId, uploaded_by: session.user.id, storage_path: path, photo_type: photoType, caption: caption?.trim() || file.name });
+      rows.push({ report_id: reportId, uploaded_by: session.user.id, storage_path: path, photo_type: photoType, caption: photoCaption?.trim() || file.name });
     }
     if (rows.length) {
       const { error: dbErr } = await supabase.from('report_photos').insert(rows);
